@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useState } from "react";
+import { ShieldCheck } from "lucide-react";
 
 const navItem =
   "px-4 py-3 rounded-lg transition flex items-center text-base";
@@ -35,12 +36,19 @@ export default function AdminLayout() {
       >
         {/* SIDEBAR HEADER */}
         <div className="px-6 py-5 border-b">
-          <h2 className="text-2xl font-bold text-gray-800">
-            Admin Panel
-          </h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Management Console
-          </p>
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-blue-100 text-blue-600">
+              <ShieldCheck size={22} />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800">
+                Admin Panel
+              </h2>
+              <p className="text-sm text-gray-500">
+                Management Console
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* NAVIGATION */}
@@ -93,9 +101,13 @@ export default function AdminLayout() {
           >
             ☰
           </button>
-          <span className="ml-4 text-lg font-semibold text-gray-800">
-            Admin Panel
-          </span>
+
+          <div className="ml-4 flex items-center gap-2">
+            <ShieldCheck size={20} className="text-blue-600" />
+            <span className="text-lg font-semibold text-gray-800">
+              Admin Panel
+            </span>
+          </div>
         </header>
 
         {/* CONTENT */}
