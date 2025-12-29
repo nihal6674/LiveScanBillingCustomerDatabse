@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./auth/Login";
+import { Toaster } from "react-hot-toast";
+
 
 /* ===== STAFF ===== */
 import StaffLayout from "./pages/staff/StaffLayout";
@@ -38,6 +40,7 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+          <Toaster position="top-right" />
         <Routes>
           {/* ---------- PUBLIC ---------- */}
           <Route path="/login" element={<Login />} />

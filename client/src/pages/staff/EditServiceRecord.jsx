@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../../api/axios";
+import toast from "react-hot-toast";
 import {
   Calendar,
   Building2,
@@ -10,7 +11,6 @@ import {
   BadgeDollarSign,
   Wrench,
   Layers,
-  CheckCircle,
   AlertTriangle,
 } from "lucide-react";
 
@@ -70,7 +70,10 @@ export default function EditServiceRecord() {
           quantity: r.quantity,
         });
       })
-      .catch(() => setError("Failed to load record"))
+      .catch(() => {
+        setError("Failed to load record");
+        toast.error("Failed to load record");
+      })
       .finally(() => setLoading(false));
   }, [id]);
 
@@ -88,9 +91,15 @@ export default function EditServiceRecord() {
 
     try {
       await api.put(`/service-records/${id}`, form);
+
+      toast.success("Service record updated successfully");
+
       navigate("/staff/my-entries");
     } catch (err) {
-      setError(err.response?.data?.message || "Update failed");
+      const msg =
+        err.response?.data?.message || "Update failed";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }

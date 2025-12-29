@@ -1,23 +1,21 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axios";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import {
   Calendar,
   Building2,
   User,
   Hash,
-  Briefcase,
-  DollarSign,
-  Lock,
   Pencil,
   CheckCircle,
   XCircle,
+  Lock,
 } from "lucide-react";
 
 export default function MyEntries() {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const loadRecords = () => {
@@ -25,7 +23,9 @@ export default function MyEntries() {
     api
       .get("/service-records/my")
       .then((res) => setRecords(res.data))
-      .catch(() => setError("Failed to load records"))
+      .catch(() =>
+        toast.error("Failed to load records")
+      )
       .finally(() => setLoading(false));
   };
 
@@ -46,10 +46,6 @@ export default function MyEntries() {
           Review and manage your submitted service entries
         </p>
       </div>
-
-      {error && (
-        <p className="text-red-600 font-medium">{error}</p>
-      )}
 
       {records.length === 0 ? (
         <div className="bg-white rounded-xl shadow border p-6 text-gray-500">
@@ -76,7 +72,8 @@ export default function MyEntries() {
               <tbody className="divide-y">
                 {records.map((r) => {
                   const total =
-                    (r.serviceRate + r.feeAmount) * r.quantity;
+                    (r.serviceRate + r.feeAmount) *
+                    r.quantity;
 
                   return (
                     <tr
@@ -84,7 +81,9 @@ export default function MyEntries() {
                       className="hover:bg-gray-50 transition"
                     >
                       <td className="px-4 py-3">
-                        {new Date(r.serviceDate).toLocaleDateString()}
+                        {new Date(
+                          r.serviceDate
+                        ).toLocaleDateString()}
                       </td>
 
                       <td className="px-4 py-3 font-medium">
@@ -110,11 +109,13 @@ export default function MyEntries() {
                       <td className="px-4 py-3 text-center">
                         {r.billed ? (
                           <span className="inline-flex items-center gap-1 text-green-600 font-semibold">
-                            <CheckCircle size={14} /> Billed
+                            <CheckCircle size={14} />{" "}
+                            Billed
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 text-orange-600 font-semibold">
-                            <XCircle size={14} /> Unbilled
+                            <XCircle size={14} />{" "}
+                            Unbilled
                           </span>
                         )}
                       </td>
@@ -127,7 +128,9 @@ export default function MyEntries() {
                         ) : (
                           <button
                             onClick={() =>
-                              navigate(`/staff/edit/${r._id}`)
+                              navigate(
+                                `/staff/edit/${r._id}`
+                              )
                             }
                             className="inline-flex items-center gap-1 text-blue-600 font-semibold hover:underline"
                           >
@@ -146,7 +149,8 @@ export default function MyEntries() {
           <div className="lg:hidden space-y-4">
             {records.map((r) => {
               const total =
-                (r.serviceRate + r.feeAmount) * r.quantity;
+                (r.serviceRate + r.feeAmount) *
+                r.quantity;
 
               return (
                 <div
@@ -162,19 +166,33 @@ export default function MyEntries() {
                     </span>
                   </div>
 
-                  <InfoRow icon={<Calendar size={14} />} label="Date">
-                    {new Date(r.serviceDate).toLocaleDateString()}
+                  <InfoRow
+                    icon={<Calendar size={14} />}
+                    label="Date"
+                  >
+                    {new Date(
+                      r.serviceDate
+                    ).toLocaleDateString()}
                   </InfoRow>
 
-                  <InfoRow icon={<Building2 size={14} />} label="Org">
+                  <InfoRow
+                    icon={<Building2 size={14} />}
+                    label="Org"
+                  >
                     {r.organizationName}
                   </InfoRow>
 
-                  <InfoRow icon={<User size={14} />} label="Applicant">
+                  <InfoRow
+                    icon={<User size={14} />}
+                    label="Applicant"
+                  >
                     {r.applicantName}
                   </InfoRow>
 
-                  <InfoRow icon={<Hash size={14} />} label="Billing #">
+                  <InfoRow
+                    icon={<Hash size={14} />}
+                    label="Billing #"
+                  >
                     {r.billingNumber}
                   </InfoRow>
 
@@ -196,7 +214,9 @@ export default function MyEntries() {
                     ) : (
                       <button
                         onClick={() =>
-                          navigate(`/staff/edit/${r._id}`)
+                          navigate(
+                            `/staff/edit/${r._id}`
+                          )
                         }
                         className="flex items-center gap-1 text-blue-600 font-semibold"
                       >

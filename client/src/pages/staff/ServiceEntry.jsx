@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axios";
+import toast from "react-hot-toast";
 import {
   Calendar,
   Building2,
@@ -9,7 +10,6 @@ import {
   BadgeDollarSign,
   Wrench,
   Layers,
-  CheckCircle,
 } from "lucide-react";
 
 export default function ServiceEntry() {
@@ -30,8 +30,6 @@ export default function ServiceEntry() {
   });
 
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
 
   /* ---------- Load dropdown data ---------- */
   useEffect(() => {
@@ -47,7 +45,9 @@ export default function ServiceEntry() {
         setFees(fees.data);
         setTechnicians(techs.data);
       })
-      .catch(() => setError("Failed to load dropdown data"));
+      .catch(() =>
+        toast.error("Failed to load dropdown data")
+      );
   }, []);
 
   /* ---------- Handle input ---------- */
@@ -62,12 +62,11 @@ export default function ServiceEntry() {
     if (loading) return;
 
     setLoading(true);
-    setMessage("");
-    setError("");
 
     try {
       await api.post("/service-records", form);
-      setMessage("Service recorded successfully");
+
+      toast.success("Service recorded successfully");
 
       // Reset (keep date)
       setForm((prev) => ({
@@ -80,8 +79,9 @@ export default function ServiceEntry() {
         quantity: 1,
       }));
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Failed to submit service"
+      toast.error(
+        err.response?.data?.message ||
+          "Failed to submit service"
       );
     } finally {
       setLoading(false);
@@ -100,30 +100,13 @@ export default function ServiceEntry() {
         </p>
       </div>
 
-      {/* SUCCESS / ERROR */}
-      {message && (
-        <div className="flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm">
-          <CheckCircle size={16} />
-          {message}
-        </div>
-      )}
-
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-          {error}
-        </div>
-      )}
-
       {/* FORM */}
       <form
         onSubmit={handleSubmit}
         className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 space-y-6"
       >
         {/* DATE */}
-        <Field
-          icon={<Calendar size={16} />}
-          label="Service Date"
-        >
+        <Field icon={<Calendar size={16} />} label="Service Date">
           <input
             type="date"
             name="serviceDate"
@@ -135,10 +118,7 @@ export default function ServiceEntry() {
         </Field>
 
         {/* ORGANIZATION */}
-        <Field
-          icon={<Building2 size={16} />}
-          label="Organization"
-        >
+        <Field icon={<Building2 size={16} />} label="Organization">
           <select
             name="organizationId"
             value={form.organizationId}
@@ -156,41 +136,30 @@ export default function ServiceEntry() {
         </Field>
 
         {/* APPLICANT */}
-        <Field
-          icon={<User size={16} />}
-          label="Applicant Name"
-        >
+        <Field icon={<User size={16} />} label="Applicant Name">
           <input
             name="applicantName"
             value={form.applicantName}
             onChange={handleChange}
             className={inputClass}
-            placeholder="Applicant full name"
             required
           />
         </Field>
 
         {/* BILLING NUMBER */}
-        <Field
-          icon={<Hash size={16} />}
-          label="Billing Number (6 digits)"
-        >
+        <Field icon={<Hash size={16} />} label="Billing Number (6 digits)">
           <input
             name="billingNumber"
             value={form.billingNumber}
             onChange={handleChange}
             pattern="\d{6}"
             className={inputClass}
-            placeholder="123456"
             required
           />
         </Field>
 
         {/* SERVICE */}
-        <Field
-          icon={<Briefcase size={16} />}
-          label="Service"
-        >
+        <Field icon={<Briefcase size={16} />} label="Service">
           <select
             name="serviceId"
             value={form.serviceId}
@@ -208,10 +177,7 @@ export default function ServiceEntry() {
         </Field>
 
         {/* FEE */}
-        <Field
-          icon={<BadgeDollarSign size={16} />}
-          label="DOJ / FBI Fee"
-        >
+        <Field icon={<BadgeDollarSign size={16} />} label="DOJ / FBI Fee">
           <select
             name="feeId"
             value={form.feeId}
@@ -229,10 +195,7 @@ export default function ServiceEntry() {
         </Field>
 
         {/* TECHNICIAN */}
-        <Field
-          icon={<Wrench size={16} />}
-          label="Technician"
-        >
+        <Field icon={<Wrench size={16} />} label="Technician">
           <select
             name="technicianId"
             value={form.technicianId}
@@ -250,10 +213,7 @@ export default function ServiceEntry() {
         </Field>
 
         {/* QUANTITY */}
-        <Field
-          icon={<Layers size={16} />}
-          label="Quantity"
-        >
+        <Field icon={<Layers size={16} />} label="Quantity">
           <select
             name="quantity"
             value={form.quantity}

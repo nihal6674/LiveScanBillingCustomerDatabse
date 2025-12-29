@@ -32,33 +32,47 @@ export default function StaffDashboard() {
       </div>
 
       {/* SNAPSHOT */}
-      <section className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <StatCard
-          label="Entries Today"
-          value={loading ? null : stats.entriesToday}
-          animated
-        />
-        <StatCard
-          label="This Week"
-          value={loading ? null : stats.entriesThisWeek}
-          animated
-        />
-        <StatCard
-          label="Unbilled Entries"
-          value={loading ? null : stats.unbilledEntries}
-          animated
-        />
-        <StatCard
-          label="Last Entry"
-          value={
-            loading
-              ? "—"
-              : stats.lastEntry
-              ? formatDateTime(stats.lastEntry)
-              : "No entries yet"
-          }
-        />
-      </section>
+     <section className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+  <StatCard
+    label="Entries Today"
+    value={loading ? null : stats.entriesToday}
+    animated
+    variant="blue"
+  />
+  <StatCard
+    label="This Week"
+    value={loading ? null : stats.entriesThisWeek}
+    animated
+    variant="green"
+  />
+  <StatCard
+    label="Unbilled Entries"
+    value={loading ? null : stats.unbilledEntries}
+    animated
+    variant="orange"
+  />
+  <StatCard
+  label="Last Entry"
+  value={
+    loading
+      ? "—"
+      : stats.lastEntry
+      ? (
+          <span
+            title={formatDateTime(stats.lastEntry)}
+            className="text-sm text-gray-600"
+          >
+            {timeAgo(stats.lastEntry)}
+          </span>
+        )
+      : "No entries yet"
+  }
+  variant="red"
+/>
+
+
+</section>
+
 
       {/* INFO / GUIDELINES */}
       <section className="bg-white rounded-2xl shadow border border-gray-100 p-6">
@@ -100,14 +114,53 @@ export default function StaffDashboard() {
 /* ===================== */
 /* STAT CARD */
 /* ===================== */
-function StatCard({ label, value, animated = false }) {
+function StatCard({ label, value, animated = false, variant = "blue" }) {
+  const styles = {
+    blue: {
+      border: "border-t-blue-500",
+      text: "text-blue-600",
+      bg: "bg-blue-50",
+    },
+    green: {
+      border: "border-t-green-500",
+      text: "text-green-600",
+      bg: "bg-green-50",
+    },
+    orange: {
+      border: "border-t-orange-500",
+      text: "text-orange-600",
+      bg: "bg-orange-50",
+    },
+    purple: {
+      border: "border-t-purple-500",
+      text: "text-purple-600",
+      bg: "bg-purple-50",
+    },
+     red: {
+    border: "border-t-red-500",
+    text: "text-red-600",
+    bg: "bg-red-50",
+  },
+  };
+
+  const theme = styles[variant];
+
   return (
-    <div className="bg-white rounded-xl shadow border border-gray-100 p-4 text-center">
+    <div
+      className={`
+        bg-white rounded-xl shadow border border-gray-100
+        border-t-4 ${theme.border}
+        p-4 text-center
+        transition hover:shadow-md
+      `}
+    >
       <div className="text-sm text-gray-500">
         {label}
       </div>
 
-      <div className="text-2xl font-bold text-gray-800 mt-1">
+      <div
+        className={`text-2xl font-bold mt-1 ${theme.text}`}
+      >
         {animated ? (
           value === null ? (
             "—"
@@ -121,6 +174,7 @@ function StatCard({ label, value, animated = false }) {
     </div>
   );
 }
+
 
 /* ===================== */
 /* ANIMATED NUMBER */
@@ -178,3 +232,16 @@ function formatDateTime(dateString) {
     timeStyle: "short",
   });
 }
+
+function timeAgo(dateString) {
+  const diff = Date.now() - new Date(dateString).getTime();
+  const mins = Math.floor(diff / 60000);
+  const hours = Math.floor(mins / 60);
+  const days = Math.floor(hours / 24);
+
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins} min ago`;
+  if (hours < 24) return `${hours} hrs ago`;
+  return `${days} days ago`;
+}
+

@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axios";
+import toast from "react-hot-toast";
+
 import {
   DollarSign,
   Tag,
@@ -32,48 +34,77 @@ export default function Fees() {
 
   /* ---------- CREATE ---------- */
   const createFee = async (e) => {
-    e.preventDefault();
-    if (loadingAction) return;
+  e.preventDefault();
+  if (loadingAction) return;
 
-    setLoadingAction("create");
-    try {
-      await api.post("/fees", {
-        label,
-        amount: Number(amount),
-      });
-      setLabel("");
-      setAmount("");
-      loadFees();
-    } finally {
-      setLoadingAction(null);
-    }
-  };
+  setLoadingAction("create");
+
+  try {
+    await api.post("/fees", {
+      label,
+      amount: Number(amount),
+    });
+
+    toast.success("Fee created successfully"); // ✅
+
+    setLabel("");
+    setAmount("");
+    loadFees();
+  } catch (err) {
+    toast.error(
+      err.response?.data?.message || "Failed to create fee"
+    ); // ❌
+  } finally {
+    setLoadingAction(null);
+  }
+};
+
 
   /* ---------- UPDATE ---------- */
   const saveEdit = async (id) => {
-    if (loadingAction) return;
+  if (loadingAction) return;
 
-    setLoadingAction(`save-${id}`);
+  setLoadingAction(`save-${id}`);
+
+  try {
     await api.put(`/fees/${id}`, {
       label: editingLabel,
       amount: Number(editingAmount),
     });
+
+    toast.success("Fee updated"); // ✅
+
     setEditingId(null);
     setEditingLabel("");
     setEditingAmount("");
     loadFees();
+  } catch {
+    toast.error("Update failed"); // ❌
+  } finally {
     setLoadingAction(null);
-  };
+  }
+};
+
 
   /* ---------- ACTIVATE / DEACTIVATE ---------- */
   const changeStatus = async (id) => {
-    if (loadingAction) return;
+  if (loadingAction) return;
 
-    setLoadingAction(`status-${id}`);
+  setLoadingAction(`status-${id}`);
+
+  try {
     await api.patch(`/fees/${id}/active`);
+
+    toast.success("Fee status updated"); // ✅
+
     loadFees();
+  } catch {
+    toast.error("Failed to update status"); // ❌
+  } finally {
     setLoadingAction(null);
-  };
+  }
+};
+
 
   return (
     <div className="space-y-8">

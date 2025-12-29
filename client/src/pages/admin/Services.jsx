@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axios";
+import toast from "react-hot-toast";
+
 import {
   Briefcase,
   Pencil,
@@ -34,46 +36,78 @@ export default function Services() {
 
   /* ---------- CREATE ---------- */
   const createService = async (e) => {
-    e.preventDefault();
-    if (loadingAction) return;
+  e.preventDefault();
+  if (loadingAction) return;
 
-    setLoadingAction("create");
+  setLoadingAction("create");
+
+  try {
     await api.post("/services/create", {
       name,
       qboItemName,
       rate: Number(rate),
     });
+
+    toast.success("Service created successfully"); // ✅
+
     setName("");
     setQboItemName("");
     setRate("");
     loadServices();
+  } catch (err) {
+    toast.error(
+      err.response?.data?.message || "Failed to create service"
+    ); // ❌
+  } finally {
     setLoadingAction(null);
-  };
+  }
+};
+
 
   /* ---------- UPDATE ---------- */
   const saveEdit = async (id) => {
-    if (loadingAction) return;
+  if (loadingAction) return;
 
-    setLoadingAction(`save-${id}`);
+  setLoadingAction(`save-${id}`);
+
+  try {
     await api.put(`/services/${id}`, {
       name: editingName,
       qboItemName: editingQbo,
       rate: Number(editingRate),
     });
+
+    toast.success("Service updated"); // ✅
+
     setEditingId(null);
     loadServices();
+  } catch {
+    toast.error("Update failed"); // ❌
+  } finally {
     setLoadingAction(null);
-  };
+  }
+};
+
 
   /* ---------- ACTIVATE / DEACTIVATE ---------- */
   const changeActive = async (id) => {
-    if (loadingAction) return;
+  if (loadingAction) return;
 
-    setLoadingAction(`active-${id}`);
+  setLoadingAction(`active-${id}`);
+
+  try {
     await api.patch(`/services/${id}/active`);
+
+    toast.success("Service status updated"); // ✅
+
     loadServices();
+  } catch {
+    toast.error("Failed to update status"); // ❌
+  } finally {
     setLoadingAction(null);
-  };
+  }
+};
+
 
   return (
     <div className="space-y-8">

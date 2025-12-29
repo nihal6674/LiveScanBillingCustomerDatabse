@@ -1,23 +1,22 @@
 import { useState } from "react";
 import api from "../../api/axios";
+import toast from "react-hot-toast";
 
 export default function Export() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [format, setFormat] = useState("csv");
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
 
   const handleExport = async () => {
     if (loading) return;
 
     if (!startDate || !endDate) {
-      setMessage("Please select a valid date range.");
+      toast.error("Please select a valid date range");
       return;
     }
 
     setLoading(true);
-    setMessage("");
 
     try {
       const response = await api.post(
@@ -36,9 +35,12 @@ export default function Export() {
       a.click();
       a.remove();
 
-      setMessage("Export completed successfully.");
+      toast.success("Export completed successfully");
     } catch (err) {
-      setMessage("Export failed. Please try again.");
+      toast.error(
+        err.response?.data?.message ||
+          "No unbilled Services Found."
+      );
     } finally {
       setLoading(false);
     }
@@ -58,13 +60,6 @@ export default function Export() {
 
       {/* CARD */}
       <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 space-y-5">
-        {/* MESSAGE */}
-        {message && (
-          <p className="text-sm font-medium text-blue-600">
-            {message}
-          </p>
-        )}
-
         {/* FORM */}
         {loading ? (
           <SkeletonBlock />
@@ -103,11 +98,14 @@ export default function Export() {
           <div className="font-semibold mb-1">
             ⚠ Please note
           </div>
-          Exporting will <span className="font-semibold">mark records as billed</span>.
-          This action cannot be undone.
+          Exporting will{" "}
+          <span className="font-semibold">
+            mark records as billed
+          </span>
+          . This action cannot be undone.
         </div>
 
-        {/* ACTION BUTTON (LOADER APPLIED) */}
+        {/* ACTION BUTTON */}
         <button
           onClick={handleExport}
           disabled={loading}

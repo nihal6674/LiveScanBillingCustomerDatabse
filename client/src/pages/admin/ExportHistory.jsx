@@ -41,11 +41,11 @@ export default function ExportHistory() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 text-gray-600">
-                <th className="px-4 py-3 text-left">Date</th>
-                <th className="px-4 py-3 text-left">Period</th>
-                <th className="px-4 py-3 text-left">Format</th>
+                <th className="px-4 py-3 text-left">Export Date</th>
+                <th className="px-4 py-3 text-left">Date Range</th>
+                <th className="px-4 py-3 text-left">Export Format</th>
                 <th className="px-4 py-3 text-left">Records</th>
-                <th className="px-4 py-3 text-left">User</th>
+                <th className="px-4 py-3 text-left">Exported By</th>
               </tr>
             </thead>
 
@@ -54,22 +54,31 @@ export default function ExportHistory() {
                 <tr key={h._id} className="hover:bg-gray-50 transition">
                   {/* Export Date */}
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-2 text-blue-600">
+                    <div className="text-xs text-gray-400">
+                      Export Date
+                    </div>
+                    <div className="flex items-center gap-2 text-blue-600 font-medium">
                       <Calendar size={16} />
                       {new Date(h.createdAt).toLocaleDateString()}
                     </div>
                   </td>
 
-                  {/* Period */}
+                  {/* Date Range */}
                   <td className="px-4 py-3">
+                    <div className="text-xs text-gray-400 mb-1">
+                      Date Range
+                    </div>
                     <PeriodPill
                       start={h.startDate}
                       end={h.endDate}
                     />
                   </td>
 
-                  {/* Format */}
+                  {/* Export Format */}
                   <td className="px-4 py-3">
+                    <div className="text-xs text-gray-400">
+                      Export Format
+                    </div>
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700 text-xs font-semibold">
                       <FileText size={14} />
                       {h.format.toUpperCase()}
@@ -78,14 +87,20 @@ export default function ExportHistory() {
 
                   {/* Records */}
                   <td className="px-4 py-3">
+                    <div className="text-xs text-gray-400">
+                      Records
+                    </div>
                     <span className="inline-flex items-center gap-1 font-semibold text-green-700">
                       <Layers size={14} />
                       {h.recordCount}
                     </span>
                   </td>
 
-                  {/* User */}
+                  {/* Exported By */}
                   <td className="px-4 py-3">
+                    <div className="text-xs text-gray-400">
+                      Exported By
+                    </div>
                     <div className="flex items-center gap-2 text-gray-600">
                       <User size={14} />
                       {h.exportedBy?.email || "—"}
@@ -110,36 +125,61 @@ export default function ExportHistory() {
               key={h._id}
               className="bg-white rounded-xl shadow border border-gray-100 p-4 space-y-4"
             >
-              {/* Top row */}
+              {/* Top Row */}
               <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2 text-blue-600 text-sm">
-                  <Calendar size={16} />
-                  {new Date(h.createdAt).toLocaleDateString()}
+                <div>
+                  <p className="text-xs text-gray-400">
+                    Export Date
+                  </p>
+                  <div className="flex items-center gap-2 text-blue-600 text-sm font-medium">
+                    <Calendar size={16} />
+                    {new Date(h.createdAt).toLocaleDateString()}
+                  </div>
                 </div>
 
-                <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 text-xs font-semibold">
-                  {h.format.toUpperCase()}
-                </span>
+                <div className="text-right">
+                  <p className="text-xs text-gray-400">
+                    Export Format
+                  </p>
+                  <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 text-xs font-semibold">
+                    {h.format.toUpperCase()}
+                  </span>
+                </div>
               </div>
 
-              {/* Period */}
-              <PeriodPill
-                start={h.startDate}
-                end={h.endDate}
-              />
+              {/* Date Range */}
+              <div>
+                <p className="text-xs text-gray-400 mb-1">
+                  Date Range
+                </p>
+                <PeriodPill
+                  start={h.startDate}
+                  end={h.endDate}
+                />
+              </div>
 
-              {/* Bottom row */}
+              {/* Bottom Row */}
               <div className="flex justify-between items-center text-sm">
-                <div className="flex items-center gap-2 text-green-700 font-semibold">
-                  <Layers size={16} />
-                  {h.recordCount} records
+                <div>
+                  <p className="text-xs text-gray-400">
+                    Records
+                  </p>
+                  <div className="flex items-center gap-2 text-green-700 font-semibold">
+                    <Layers size={16} />
+                    {h.recordCount}
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-2 text-gray-500">
-                  <User size={16} />
-                  <span className="truncate max-w-[140px]">
-                    {h.exportedBy?.email || "—"}
-                  </span>
+                <div className="text-right">
+                  <p className="text-xs text-gray-400">
+                    Exported By
+                  </p>
+                  <div className="flex items-center gap-2 text-gray-500">
+                    <User size={16} />
+                    <span className="truncate max-w-[140px]">
+                      {h.exportedBy?.email || "—"}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>

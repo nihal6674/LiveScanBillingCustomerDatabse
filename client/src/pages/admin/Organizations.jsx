@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axios";
+import toast from "react-hot-toast";
+
 import {
   Building2,
   Pencil,
@@ -39,10 +41,13 @@ export default function Organizations() {
 
     try {
       await api.post("/organizations", { name });
+      toast.success("Organization created successfully"); // ✅ SUCCESS
       setName("");
       loadOrgs();
     } catch (err) {
       setError(err.response?.data?.message || "Create failed");
+      toast.error(msg); // ❌ FAILURE
+
     } finally {
       setLoadingAction(null);
     }
@@ -57,9 +62,13 @@ export default function Organizations() {
       await api.put(`/organizations/${id}`, {
         name: editingName,
       });
+      toast.success("Organization updated"); // ✅
+
       setEditingId(null);
       setEditingName("");
       loadOrgs();
+    } catch {
+      toast.error("Update failed"); // ❌
     } finally {
       setLoadingAction(null);
     }
@@ -67,23 +76,41 @@ export default function Organizations() {
 
   /* ---------- ACTIVATE / DEACTIVATE ---------- */
   const changeActive = async (id) => {
-    if (loadingAction) return;
+  if (loadingAction) return;
 
-    setLoadingAction(`active-${id}`);
+  setLoadingAction(`active-${id}`);
+  try {
     await api.patch(`/organizations/${id}/active`);
+
+    toast.success("Organization status updated"); // ✅
+
     loadOrgs();
+  } catch {
+    toast.error("Failed to update status"); // ❌
+  } finally {
     setLoadingAction(null);
-  };
+  }
+};
+
 
   /* ---------- SUSPEND / UNSUSPEND ---------- */
   const changeSuspend = async (id) => {
-    if (loadingAction) return;
+  if (loadingAction) return;
 
-    setLoadingAction(`suspend-${id}`);
+  setLoadingAction(`suspend-${id}`);
+  try {
     await api.patch(`/organizations/${id}/suspend`);
+
+    toast.success("Suspension status updated"); // ✅
+
     loadOrgs();
+  } catch {
+    toast.error("Failed to update suspension"); // ❌
+  } finally {
     setLoadingAction(null);
-  };
+  }
+};
+
 
   return (
     <div className="space-y-8">

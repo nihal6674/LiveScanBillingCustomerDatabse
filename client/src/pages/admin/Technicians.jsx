@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axios";
+import toast from "react-hot-toast";
+
 import {
   User,
   Pencil,
@@ -30,51 +32,73 @@ export default function Technicians() {
 
   /* ---------- CREATE ---------- */
   const createTech = async (e) => {
-    e.preventDefault();
-    if (loadingAction) return;
+  e.preventDefault();
+  if (loadingAction) return;
 
-    setLoadingAction("create");
-    setError("");
+  setLoadingAction("create");
+  setError("");
 
-    try {
-      await api.post("/technicians", { name });
-      setName("");
-      loadTechs();
-    } catch (err) {
-      setError(err.response?.data?.message || "Create failed");
-    } finally {
-      setLoadingAction(null);
-    }
-  };
+  try {
+    await api.post("/technicians", { name });
+
+    toast.success("Technician added successfully"); // ✅
+
+    setName("");
+    loadTechs();
+  } catch (err) {
+    const msg =
+      err.response?.data?.message || "Create failed";
+
+    setError(msg);
+    toast.error(msg); // ❌
+  } finally {
+    setLoadingAction(null);
+  }
+};
 
   /* ---------- UPDATE ---------- */
   const saveEdit = async (id) => {
-    if (loadingAction) return;
+  if (loadingAction) return;
 
-    setLoadingAction(`save-${id}`);
-    try {
-      await api.put(`/technicians/${id}`, {
-        name: editingName,
-      });
-      setEditingId(null);
-      setEditingName("");
-      loadTechs();
-    } catch {
-      alert("Update failed");
-    } finally {
-      setLoadingAction(null);
-    }
-  };
+  setLoadingAction(`save-${id}`);
+
+  try {
+    await api.put(`/technicians/${id}`, {
+      name: editingName,
+    });
+
+    toast.success("Technician updated"); // ✅
+
+    setEditingId(null);
+    setEditingName("");
+    loadTechs();
+  } catch {
+    toast.error("Update failed"); // ❌
+  } finally {
+    setLoadingAction(null);
+  }
+};
+
 
   /* ---------- ACTIVATE / DEACTIVATE ---------- */
   const changeActive = async (id) => {
-    if (loadingAction) return;
+  if (loadingAction) return;
 
-    setLoadingAction(`active-${id}`);
+  setLoadingAction(`active-${id}`);
+
+  try {
     await api.patch(`/technicians/${id}/active`);
+
+    toast.success("Technician status updated"); // ✅
+
     loadTechs();
+  } catch {
+    toast.error("Failed to update status"); // ❌
+  } finally {
     setLoadingAction(null);
-  };
+  }
+};
+
 
   return (
     <div className="space-y-8">
