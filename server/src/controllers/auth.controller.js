@@ -71,12 +71,14 @@ exports.login = async (req, res) => {
 exports.logout = async (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
-    secure: true,      // true in production (HTTPS)
-    sameSite: "lax",
+    secure: true,       // must match login
+    sameSite: "none",   // MUST MATCH LOGIN
+    path: "/",          // MUST MATCH LOGIN
   });
 
   return res.json({ message: "Logged out successfully" });
 };
+
 
 // auth.controller.js
 exports.me = async (req, res) => {
