@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Navigate, BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./auth/Login";
@@ -41,20 +41,15 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
           <Toaster position="top-right" />
+          
         <Routes>
+<Route path="/" element={<Navigate to="/login" replace />} />
+
           {/* ---------- PUBLIC ---------- */}
           <Route path="/login" element={<Login />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
 
-          {/* ---------- ROOT REDIRECT ---------- */}
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <div /> {/* redirect handled in ProtectedRoute */}
-              </ProtectedRoute>
-            }
-          />
+          
 
           {/* ---------- STAFF ---------- */}
           <Route
@@ -91,14 +86,8 @@ export default function App() {
           </Route>
 
           {/* ---------- FALLBACK ---------- */}
-          <Route
-            path="*"
-            element={
-              <div className="min-h-screen flex items-center justify-center">
-                <h1 className="text-xl font-bold">Page Not Found</h1>
-              </div>
-            }
-          />
+          <Route path="/*" element={<Navigate to="/login" replace />} />
+          
         </Routes>
       </BrowserRouter>
     </AuthProvider>

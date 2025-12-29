@@ -1,30 +1,18 @@
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export default function ProtectedRoute({ children, role }) {
   const { user, loading } = useAuth();
-  const location = useLocation();
 
-  if (loading) {
-    return <div className="p-6">Loading...</div>;
-  }
+  // 🔇 NO UI during loading (prevents flash)
+  if (loading) return null;
 
-  // Not logged in → go to login
+  // ❌ Not logged in → login
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  // 🔁 Redirect on refresh if user hits "/"
-  if (location.pathname === "/") {
-    return (
-      <Navigate
-        to={user.role === "ADMIN" ? "/admin" : "/staff"}
-        replace
-      />
-    );
-  }
-
-  // Role protected route
+  // ❌ Role mismatch
   if (role && user.role !== role) {
     return <Navigate to="/unauthorized" replace />;
   }
