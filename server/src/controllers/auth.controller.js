@@ -71,7 +71,7 @@ exports.login = async (req, res) => {
 exports.logout = async (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
-    secure: false,      // true in production (HTTPS)
+    secure: true,      // true in production (HTTPS)
     sameSite: "lax",
   });
 
