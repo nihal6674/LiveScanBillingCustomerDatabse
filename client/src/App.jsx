@@ -1,6 +1,7 @@
 import { Navigate, BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import PublicOnlyRoute from "./components/PublicOnlyRoute";
 import Login from "./auth/Login";
 import { Toaster } from "react-hot-toast";
 
@@ -40,17 +41,20 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-          <Toaster position="top-right" />
-          
+        <Toaster position="top-right" />
+
         <Routes>
-<Route path="/" element={<Navigate to="/login" replace />} />
-
+          <Route path="/" element={<Navigate to="/login" replace />} />
           {/* ---------- PUBLIC ---------- */}
-          <Route path="/login" element={<Login />} />
+          <Route
+            path="/login"
+            element={
+              <PublicOnlyRoute>
+                <Login />
+              </PublicOnlyRoute>
+            }
+          />{" "}
           <Route path="/unauthorized" element={<Unauthorized />} />
-
-          
-
           {/* ---------- STAFF ---------- */}
           <Route
             path="/staff"
@@ -65,7 +69,6 @@ export default function App() {
             <Route path="my-entries" element={<MyEntries />} />
             <Route path="edit/:id" element={<EditServiceRecord />} />
           </Route>
-
           {/* ---------- ADMIN ---------- */}
           <Route
             path="/admin"
@@ -82,12 +85,9 @@ export default function App() {
             <Route path="technicians" element={<Technicians />} />
             <Route path="export" element={<Export />} />
             <Route path="export-history" element={<ExportHistory />} />
-
           </Route>
-
           {/* ---------- FALLBACK ---------- */}
           <Route path="/*" element={<Navigate to="/login" replace />} />
-          
         </Routes>
       </BrowserRouter>
     </AuthProvider>
