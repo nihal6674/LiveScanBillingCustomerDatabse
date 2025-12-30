@@ -24,7 +24,7 @@ import Export from "./pages/admin/Export";
 import ExportHistory from "./pages/admin/ExportHistory";
 
 
-import AuthGate from "./components/AuthGate";
+
 
 /* ===== MISC ===== */
 function Unauthorized() {
@@ -42,7 +42,7 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Toaster position="top-right" />
-      <AuthGate.jsx>
+
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           {/* ---------- PUBLIC ---------- */}
@@ -89,8 +89,6 @@ export default function App() {
           {/* ---------- FALLBACK ---------- */}
           <Route path="/*" element={<Navigate to="/login" replace />} />
         </Routes>
-</AuthGate.jsx>
-
       </BrowserRouter>
     </AuthProvider>
   );
