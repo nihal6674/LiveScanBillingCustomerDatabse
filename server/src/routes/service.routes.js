@@ -13,8 +13,8 @@ const { ADMIN, STAFF } = require("../constants/roles");
 
 const router = express.Router();
 
-/* STAFF */
-router.get("/staff", auth, role(STAFF), getActiveServicesForStaff);
+/* STAFF ADMIN ROUTE TO GET ACTIVE ORGANIZATION FOR DROPDOWN */
+router.get("/staff", auth, role(STAFF,ADMIN), getActiveServicesForStaff);
 
 /* ADMIN */
 router.post("/create", auth, role(ADMIN), createService);

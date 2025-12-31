@@ -41,12 +41,8 @@ export default function AdminLayout() {
               <ShieldCheck size={22} />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-800">
-                Admin Panel
-              </h2>
-              <p className="text-sm text-gray-500">
-                Management Console
-              </p>
+              <h2 className="text-2xl font-bold text-gray-800">Admin Panel</h2>
+              <p className="text-sm text-gray-500">Management Console</p>
             </div>
           </div>
         </div>
@@ -55,6 +51,8 @@ export default function AdminLayout() {
         <nav className="flex-1 px-4 py-5 space-y-2">
           {[
             ["Dashboard", "/admin"],
+            ["Service Entry", "/admin/service-entry"],
+            ["My Entries", "/admin/my-entries"],
             ["Organizations", "/admin/organizations"],
             ["Services", "/admin/services"],
             ["DOJ / FBI Fees", "/admin/fees"],

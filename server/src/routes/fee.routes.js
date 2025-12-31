@@ -16,7 +16,7 @@ const router = express.Router();
 /* =======================
    STAFF (READ ONLY)
    ======================= */
-router.get("/staff", auth, role(STAFF), getActiveFeesForStaff);
+router.get("/staff", auth, role(STAFF,ADMIN), getActiveFeesForStaff);
 
 /* =======================
    ADMIN

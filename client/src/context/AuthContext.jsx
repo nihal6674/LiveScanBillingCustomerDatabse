@@ -9,25 +9,42 @@ export const AuthProvider = ({ children }) => {
 
   // check login on refresh
   useEffect(() => {
-    api
-      .get("/auth/me")
-      .then((res) => setUser(res.data))
-      .catch(() => setUser(null))
-      .finally(() => setLoading(false));
-  }, []);
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    setLoading(false);
+    return;
+  }
+
+  api
+    .get("/auth/me")
+    .then((res) => setUser(res.data))
+    .catch(() => {
+      localStorage.removeItem("token");
+      setUser(null);
+    })
+    .finally(() => setLoading(false));
+}, []);
+
 
   const login = async (email, password) => {
-  await api.post("/auth/login", { email, password });
-  const res = await api.get("/auth/me");
-  setUser(res.data);
-  return res.data; // 👈 IMPORTANT
+  const res = await api.post("/auth/login", { email, password });
+
+  const { token, user } = res.data;
+
+  localStorage.setItem("token", token);
+  setUser(user);
+
+  return user;
 };
 
 
-  const logout = async () => {
-    await api.post("/auth/logout");
-    setUser(null);
-  };
+
+  const logout = () => {
+  localStorage.removeItem("token");
+  setUser(null);
+};
+
 
   return (
     <AuthContext.Provider value={{ user, login, logout, loading }}>

@@ -79,6 +79,11 @@ export default function App() {
             }
           >
             <Route index element={<AdminDashboard />} />
+            {/* ✅ STAFF FEATURES FOR ADMIN */}
+            <Route path="service-entry" element={<ServiceEntry />} />
+            <Route path="my-entries" element={<MyEntries />} />
+            <Route path="edit/:id" element={<EditServiceRecord />} />
+
             <Route path="organizations" element={<Organizations />} />
             <Route path="services" element={<Services />} />
             <Route path="fees" element={<Fees />} />

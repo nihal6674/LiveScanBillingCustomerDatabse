@@ -53,12 +53,25 @@ exports.login = async (req, res) => {
 
     const token = generateToken(user);
 
-    res.cookie("token", token, {
-      httpOnly: true,      // JS cannot access
-      secure: true,       // true in production (HTTPS)
-      sameSite: "none",
-      maxAge: 24 * 60 * 60 * 1000, // 1 day
-    });
+    // res.cookie("token", token, {
+    //   httpOnly: true,      // JS cannot access
+    //   secure: true,       // true in production (HTTPS)
+    //   sameSite: "none",
+    //   maxAge: 24 * 60 * 60 * 1000, // 1 day
+    // });
+
+    res.json({
+  message: "Login successful",
+  token,
+  user: {
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    active: user.active,
+  },
+});
+
 
     res.json({ message: "Login successful" });
   } catch (err) {
@@ -69,12 +82,12 @@ exports.login = async (req, res) => {
 
 
 exports.logout = async (req, res) => {
-  res.clearCookie("token", {
-    httpOnly: true,
-    secure: true,       // must match login
-    sameSite: "none",   // MUST MATCH LOGIN
-    path: "/",          // MUST MATCH LOGIN
-  });
+  // res.clearCookie("token", {
+  //   httpOnly: true,
+  //   secure: true,       // must match login
+  //   sameSite: "none",   // MUST MATCH LOGIN
+  //   path: "/",          // MUST MATCH LOGIN
+  // });
 
   return res.json({ message: "Logged out successfully" });
 };

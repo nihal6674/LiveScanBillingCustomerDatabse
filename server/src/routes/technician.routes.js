@@ -14,7 +14,7 @@ const { ADMIN, STAFF } = require("../constants/roles");
 const router = express.Router();
 
 /* STAFF */
-router.get("/staff", auth, role(STAFF), getActiveTechniciansForStaff);
+router.get("/staff", auth, role(STAFF,ADMIN), getActiveTechniciansForStaff);
 
 /* ADMIN */
 router.post("/", auth, role(ADMIN), createTechnician);

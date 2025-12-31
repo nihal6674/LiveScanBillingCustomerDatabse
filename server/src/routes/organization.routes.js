@@ -20,7 +20,7 @@ const router = express.Router();
 router.get(
   "/staff",
   auth,
-  role(STAFF),
+  role(STAFF,ADMIN),
   getActiveOrganizationsForStaff
 );
 
