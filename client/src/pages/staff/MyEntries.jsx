@@ -12,6 +12,7 @@ import {
   XCircle,
   Lock,
 } from "lucide-react";
+import { formatDate } from "../../utils/date";
 
 export default function MyEntries() {
   const [records, setRecords] = useState([]);
@@ -23,9 +24,7 @@ export default function MyEntries() {
     api
       .get("/service-records/my")
       .then((res) => setRecords(res.data))
-      .catch(() =>
-        toast.error("Failed to load records")
-      )
+      .catch(() => toast.error("Failed to load records"))
       .finally(() => setLoading(false));
   };
 
@@ -39,9 +38,7 @@ export default function MyEntries() {
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* HEADER */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-800">
-          My Entries
-        </h1>
+        <h1 className="text-3xl font-bold text-gray-800">My Entries</h1>
         <p className="text-gray-500 mt-1">
           Review and manage your submitted service entries
         </p>
@@ -71,36 +68,21 @@ export default function MyEntries() {
 
               <tbody className="divide-y">
                 {records.map((r) => {
-                  const total =
-                    (r.serviceRate + r.feeAmount) *
-                    r.quantity;
+                  const total = (r.serviceRate + r.feeAmount) * r.quantity;
 
                   return (
-                    <tr
-                      key={r._id}
-                      className="hover:bg-gray-50 transition"
-                    >
-                      <td className="px-4 py-3">
-                        {new Date(
-                          r.serviceDate
-                        ).toLocaleDateString()}
-                      </td>
+                    <tr key={r._id} className="hover:bg-gray-50 transition">
+                      <td className="px-4 py-3">{formatDate(r.serviceDate)}</td>
 
                       <td className="px-4 py-3 font-medium">
                         {r.organizationName}
                       </td>
 
-                      <td className="px-4 py-3">
-                        {r.applicantName}
-                      </td>
+                      <td className="px-4 py-3">{r.applicantName}</td>
 
-                      <td className="px-4 py-3">
-                        {r.billingNumber}
-                      </td>
+                      <td className="px-4 py-3">{r.billingNumber}</td>
 
-                      <td className="px-4 py-3">
-                        {r.serviceName}
-                      </td>
+                      <td className="px-4 py-3">{r.serviceName}</td>
 
                       <td className="px-4 py-3 text-right font-semibold">
                         ${total.toFixed(2)}
@@ -109,13 +91,11 @@ export default function MyEntries() {
                       <td className="px-4 py-3 text-center">
                         {r.billed ? (
                           <span className="inline-flex items-center gap-1 text-green-600 font-semibold">
-                            <CheckCircle size={14} />{" "}
-                            Billed
+                            <CheckCircle size={14} /> Billed
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 text-orange-600 font-semibold">
-                            <XCircle size={14} />{" "}
-                            Unbilled
+                            <XCircle size={14} /> Unbilled
                           </span>
                         )}
                       </td>
@@ -127,11 +107,7 @@ export default function MyEntries() {
                           </span>
                         ) : (
                           <button
-                            onClick={() =>
-                              navigate(
-                                `/staff/edit/${r._id}`
-                              )
-                            }
+                            onClick={() => navigate(`/staff/edit/${r._id}`)}
                             className="inline-flex items-center gap-1 text-blue-600 font-semibold hover:underline"
                           >
                             <Pencil size={14} /> Edit
@@ -148,9 +124,7 @@ export default function MyEntries() {
           {/* ================= MOBILE CARDS ================= */}
           <div className="lg:hidden space-y-4">
             {records.map((r) => {
-              const total =
-                (r.serviceRate + r.feeAmount) *
-                r.quantity;
+              const total = (r.serviceRate + r.feeAmount) * r.quantity;
 
               return (
                 <div
@@ -166,33 +140,19 @@ export default function MyEntries() {
                     </span>
                   </div>
 
-                  <InfoRow
-                    icon={<Calendar size={14} />}
-                    label="Date"
-                  >
-                    {new Date(
-                      r.serviceDate
-                    ).toLocaleDateString()}
+                  <InfoRow icon={<Calendar size={14} />} label="Date">
+                    {formatDate(r.serviceDate)}
                   </InfoRow>
 
-                  <InfoRow
-                    icon={<Building2 size={14} />}
-                    label="Org"
-                  >
+                  <InfoRow icon={<Building2 size={14} />} label="Org">
                     {r.organizationName}
                   </InfoRow>
 
-                  <InfoRow
-                    icon={<User size={14} />}
-                    label="Applicant"
-                  >
+                  <InfoRow icon={<User size={14} />} label="Applicant">
                     {r.applicantName}
                   </InfoRow>
 
-                  <InfoRow
-                    icon={<Hash size={14} />}
-                    label="Billing #"
-                  >
+                  <InfoRow icon={<Hash size={14} />} label="Billing #">
                     {r.billingNumber}
                   </InfoRow>
 
@@ -213,11 +173,7 @@ export default function MyEntries() {
                       </span>
                     ) : (
                       <button
-                        onClick={() =>
-                          navigate(
-                            `/staff/edit/${r._id}`
-                          )
-                        }
+                        onClick={() => navigate(`/staff/edit/${r._id}`)}
                         className="flex items-center gap-1 text-blue-600 font-semibold"
                       >
                         <Pencil size={14} /> Edit
@@ -244,9 +200,7 @@ function InfoRow({ icon, label, children }) {
         {icon}
         <span>{label}</span>
       </div>
-      <span className="font-medium text-gray-800">
-        {children}
-      </span>
+      <span className="font-medium text-gray-800">{children}</span>
     </div>
   );
 }
@@ -259,9 +213,7 @@ function PageLoader() {
     <div className="flex items-center justify-center min-h-[60vh]">
       <div className="flex flex-col items-center gap-4">
         <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
-        <span className="text-gray-600 font-medium">
-          Loading entries…
-        </span>
+        <span className="text-gray-600 font-medium">Loading entries…</span>
       </div>
     </div>
   );

@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 export default function Export() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [format, setFormat] = useState("csv");
+  const [format] = useState("csv");
   const [loading, setLoading] = useState(false);
 
   const handleExport = async () => {
@@ -82,12 +82,11 @@ export default function Export() {
               </label>
               <select
                 value={format}
-                onChange={(e) => setFormat(e.target.value)}
+                
                 className="w-full rounded-lg border border-gray-300 px-3 py-2
                            focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="csv">CSV</option>
-                <option value="xlsx">Excel (.xlsx)</option>
               </select>
             </div>
           </>

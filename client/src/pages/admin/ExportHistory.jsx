@@ -7,6 +7,7 @@ import {
   User,
   FileText,
 } from "lucide-react";
+import { formatDate } from "../../utils/date";
 
 export default function ExportHistory() {
   const [history, setHistory] = useState([]);
@@ -59,7 +60,8 @@ export default function ExportHistory() {
                     </div>
                     <div className="flex items-center gap-2 text-blue-600 font-medium">
                       <Calendar size={16} />
-                      {new Date(h.createdAt).toLocaleDateString()}
+                      {formatDate(h.createdAt)}
+
                     </div>
                   </td>
 
@@ -133,7 +135,8 @@ export default function ExportHistory() {
                   </p>
                   <div className="flex items-center gap-2 text-blue-600 text-sm font-medium">
                     <Calendar size={16} />
-                    {new Date(h.createdAt).toLocaleDateString()}
+                    {formatDate(h.createdAt)}
+
                   </div>
                 </div>
 
@@ -199,14 +202,16 @@ function PeriodPill({ start, end }) {
     <div className="inline-flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg border text-sm">
       <Calendar size={14} className="text-gray-500" />
       <span className="text-gray-700">
-        {new Date(start).toLocaleDateString()}
+       {formatDate(start)}
+
       </span>
 
       <ArrowRight size={14} className="text-gray-400" />
 
       <Calendar size={14} className="text-gray-500" />
       <span className="text-gray-700">
-        {new Date(end).toLocaleDateString()}
+        {formatDate(end)}
+
       </span>
     </div>
   );

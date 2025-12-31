@@ -9,6 +9,10 @@ import {
 } from "lucide-react";
 import api from "../../api/axios";
 
+import { formatDate } from "../../utils/date";
+
+
+
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -52,8 +56,11 @@ export default function AdminDashboard() {
         </h2>
 
         <Row icon={<Calendar className="text-blue-500" />} label="Last Export">
-          {stats.lastExportDate || "Not yet exported"}
-        </Row>
+  {stats.lastExportDate
+    ? formatDate(stats.lastExportDate)
+    : "Not yet exported"}
+</Row>
+
 
         <Row icon={<Package className="text-indigo-500" />} label="Records Exported">
           {stats.lastExportCount || 0}
