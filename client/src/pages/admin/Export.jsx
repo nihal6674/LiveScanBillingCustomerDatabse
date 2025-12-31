@@ -1,6 +1,7 @@
 import { useState } from "react";
 import api from "../../api/axios";
 import toast from "react-hot-toast";
+import {formatMMDDYYYYForFile} from "../../utils/formatMMDDYYYYForFile"
 
 export default function Export() {
   const [startDate, setStartDate] = useState("");
@@ -30,7 +31,9 @@ export default function Export() {
 
       const a = document.createElement("a");
       a.href = url;
-      a.download = `LiveScan_HouseAccounts_${startDate}_to_${endDate}.${format}`;
+      a.download = `LiveScan_HouseAccounts_${formatMMDDYYYYForFile(
+        startDate
+      )}_to_${formatMMDDYYYYForFile(endDate)}.${format}`;
       document.body.appendChild(a);
       a.click();
       a.remove();

@@ -4,6 +4,14 @@ const ExportBatch = require("../models/ExportBatch");
 const { Parser } = require("json2csv");
 const XLSX = require("xlsx");
 
+const formatMMDDYYYY = (date) => {
+  const d = new Date(date);
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  return `${mm}/${dd}/${yyyy}`;
+};
+
 exports.exportMonthly = async (req, res) => {
   try {
     console.log("EXPORT BODY 👉", req.body);
@@ -45,7 +53,7 @@ exports.exportMonthly = async (req, res) => {
       Customer: r.organizationName,
 
       // 🔑 QBO INVOICE FIELDS
-      "Invoice Date": r.serviceDate.toISOString().slice(0, 10),
+      "Invoice Date": formatMMDDYYYY(r.serviceDate), 
       "Product/Service": r.qboItemName,
       Qty: r.quantity,
       Rate: r.serviceRate,
@@ -53,7 +61,7 @@ exports.exportMonthly = async (req, res) => {
 
       // 🧾 INTERNAL / AUDIT FIELDS (ignored by QBO)
       Organization: r.organizationName,
-      ServiceDate: r.serviceDate.toISOString().slice(0, 10),
+      ServiceDate: formatMMDDYYYY(r.serviceDate),
       Service: r.serviceName,
       Applicant: r.applicantName,
       BillingNumber: r.billingNumber,
