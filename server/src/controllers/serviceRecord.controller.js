@@ -102,7 +102,7 @@ exports.createServiceRecord = async (req, res) => {
     });
   }
 
-  console.error("CREATE SERVICE RECORD ERROR 👉", err);
+  console.error("Error while creating service record", err);
   res.status(500).json({ message: "Server error" });
 }
 
