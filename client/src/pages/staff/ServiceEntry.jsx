@@ -148,15 +148,25 @@ export default function ServiceEntry() {
 
         {/* BILLING NUMBER */}
         <Field icon={<Hash size={16} />} label="Billing Number (6 digits)">
-          <input
-            name="billingNumber"
-            value={form.billingNumber}
-            onChange={handleChange}
-            pattern="\d{6}"
-            className={inputClass}
-            required
-          />
-        </Field>
+  <input
+    type="text"
+    name="billingNumber"
+    value={form.billingNumber}
+    onChange={(e) => {
+      // allow only digits and max 6 chars
+      const value = e.target.value.replace(/\D/g, "").slice(0, 6);
+      handleChange({
+        target: { name: "billingNumber", value },
+      });
+    }}
+    inputMode="numeric"
+    pattern="\d{6}"
+    maxLength={6}
+    className={inputClass}
+    required
+  />
+</Field>
+
 
         {/* SERVICE */}
         <Field icon={<Briefcase size={16} />} label="Service">
