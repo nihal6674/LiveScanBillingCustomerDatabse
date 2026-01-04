@@ -75,3 +75,16 @@ Response:
 
 
 SERVICE RECORD
+
+
+
+
+Invoice numbers are system-generated, unique, and tied to the export batch, ensuring:
+
+No duplicate invoice numbers
+
+Safe re-exports
+
+Clear traceability between invoices and exports
+
+The customer name can include both the organization and service description as requested, without affecting invoice grouping.

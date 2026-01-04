@@ -14,9 +14,20 @@ const formatMMDDYYYY = (date) => {
 
 exports.exportMonthly = async (req, res) => {
   try {
+
+
+
     console.log("EXPORT BODY 👉", req.body);
 
     const { startDate, endDate, format } = req.body;
+
+    const exportDate = new Date(); // export execution date
+
+    const dueDateObj = new Date(exportDate);
+    dueDateObj.setDate(dueDateObj.getDate() + 14); // +14 days
+
+    const dueDate = formatMMDDYYYY(dueDateObj);
+
 
     // ✅ Validation
     if (!startDate || !endDate || !format) {
@@ -47,28 +58,10 @@ exports.exportMonthly = async (req, res) => {
       });
     }
 
-    // ✅ Prepare QBO-COMPLIANT rows (flat + safe)
-    const rows = records.map((r) => ({
-      // 🔑 QBO GROUPING KEY
-      Customer: r.organizationName,
+    const invoiceMap = {}; // orgId -> invoiceNo
 
-      // 🔑 QBO INVOICE FIELDS
-      "Invoice Date": formatMMDDYYYY(r.serviceDate), 
-      "Product/Service": r.qboItemName,
-      Qty: r.quantity,
-      Rate: r.serviceRate,
-      Amount: r.serviceRate * r.quantity,
+    
 
-      // 🧾 INTERNAL / AUDIT FIELDS (ignored by QBO)
-      Organization: r.organizationName,
-      ServiceDate: formatMMDDYYYY(r.serviceDate),
-      Service: r.serviceName,
-      Applicant: r.applicantName,
-      BillingNumber: r.billingNumber,
-      "DOJ/FBI Fee": r.feeAmount,
-      Total: (r.serviceRate + r.feeAmount) * r.quantity,
-      Technician: r.technicianName,
-    }));
 
     // ✅ CREATE EXPORT BATCH FIRST (CRITICAL)
     const exportBatch = await ExportBatch.create({
@@ -78,6 +71,49 @@ exports.exportMonthly = async (req, res) => {
       recordCount: records.length,
       exportedBy: req.user.userId,
     });
+
+    // ✅ ONE invoice number per organization
+const getInvoiceNo = (r) => {
+  const orgKey = r.organizationId.toString();
+
+  if (!invoiceMap[orgKey]) {
+    invoiceMap[orgKey] =
+      `LS-${exportBatch._id.toString().slice(-6)}-${orgKey.slice(-4)}`;
+  }
+
+  return invoiceMap[orgKey];
+};
+
+
+    // ✅ Prepare QBO-COMPLIANT rows (flat + safe)
+    const rows = records.map((r) => ({
+  // 🔑 FORCE BUNDLING
+  "Invoice No": getInvoiceNo(r),
+
+  // 👤 CLIENT-REQUESTED FORMAT
+  Customer: `${r.organizationName}: ${r.qboItemName}`,
+
+  // 📅 DATES
+  "Invoice Date": formatMMDDYYYY(r.serviceDate),
+  "Due Date": dueDate, // export date + 14 days
+
+  // 📦 LINE ITEM
+  "Product/Service": r.qboItemName,
+  Qty: r.quantity,
+  Rate: r.serviceRate,
+  Amount: r.serviceRate * r.quantity,
+
+  // 🧾 AUDIT FIELDS (ignored by QBO)
+  Organization: r.organizationName,
+  ServiceDate: formatMMDDYYYY(r.serviceDate),
+  Service: r.serviceName,
+  Applicant: r.applicantName,
+  BillingNumber: r.billingNumber,
+  "DOJ/FBI Fee": r.feeAmount,
+  Total: (r.serviceRate + r.feeAmount) * r.quantity,
+  Technician: r.technicianName,
+}));
+
 
     // ✅ UPDATE SERVICE RECORDS WITH BATCH INFO
     await ServiceRecord.updateMany(
@@ -136,8 +172,8 @@ exports.exportMonthly = async (req, res) => {
 exports.getExportHistory = async (req, res) => {
   try {
     const history = await ExportBatch.find()
-  .sort({ createdAt: -1 })
-  .populate("exportedBy", "email");
+      .sort({ createdAt: -1 })
+      .populate("exportedBy", "email");
 
 
     res.json(history);

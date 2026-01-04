@@ -53,6 +53,7 @@ export default function AdminLayout() {
             ["Dashboard", "/admin"],
             ["Service Entry", "/admin/service-entry"],
             ["My Entries", "/admin/my-entries"],
+            ["All Entries", "/admin/all-entries"],
             ["Organizations", "/admin/organizations"],
             ["Services", "/admin/services"],
             ["DOJ / FBI Fees", "/admin/fees"],

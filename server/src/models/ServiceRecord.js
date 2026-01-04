@@ -68,6 +68,5 @@ const serviceRecordSchema = new mongoose.Schema(
 );
 
 
-serviceRecordSchema.index({ billingNumber: 1 }, { unique: true });
 
 module.exports = mongoose.model("ServiceRecord", serviceRecordSchema);

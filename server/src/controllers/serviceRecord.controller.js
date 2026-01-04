@@ -95,13 +95,6 @@ exports.createServiceRecord = async (req, res) => {
 
     res.status(201).json(record);
   } catch (err) {
-  // 🔒 Duplicate billing number (MongoDB)
-  if (err.code === 11000) {
-    return res.status(400).json({
-      message: "Duplicate billing number. This entry already exists.",
-    });
-  }
-
   console.error("Error while creating service record", err);
   res.status(500).json({ message: "Server error" });
 }
@@ -239,4 +232,24 @@ exports.getServiceRecordById = async (req, res) => {
   const record = await ServiceRecord.findById(req.params.id);
   if (!record) return res.status(404).json({ message: "Not found" });
   res.json(record);
+};
+
+// ADMIN: view all service records
+exports.getAllServiceRecords = async (req, res) => {
+  try {
+    // 🔒 Admin-only check
+    if (req.user.role !== "ADMIN") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const records = await ServiceRecord.find()
+      .populate("enteredBy", "email name") // ✅ ADD THIS
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.json(records);
+  } catch (err) {
+    console.error("GET ALL RECORDS ERROR:", err);
+    res.status(500).json({ message: "Server error" });
+  }
 };

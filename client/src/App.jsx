@@ -22,6 +22,7 @@ import Services from "./pages/admin/Services";
 import Technicians from "./pages/admin/Technicians";
 import Export from "./pages/admin/Export";
 import ExportHistory from "./pages/admin/ExportHistory";
+import AllEntries from "./pages/admin/AllEntries";
 
 
 
@@ -82,6 +83,7 @@ export default function App() {
             {/* ✅ STAFF FEATURES FOR ADMIN */}
             <Route path="service-entry" element={<ServiceEntry />} />
             <Route path="my-entries" element={<MyEntries />} />
+            <Route path="all-entries" element={<AllEntries />} />
             <Route path="edit/:id" element={<EditServiceRecord />} />
 
             <Route path="organizations" element={<Organizations />} />
