@@ -91,7 +91,7 @@ const getInvoiceNo = (r) => {
   "Invoice No": getInvoiceNo(r),
 
   // 👤 CLIENT-REQUESTED FORMAT
-  Customer: `${r.organizationName}: ${r.qboItemName}`,
+  Customer: `${r.organizationName}:${r.qboItemName}`,
 
   // 📅 DATES
   "Invoice Date": formatMMDDYYYY(r.serviceDate),
