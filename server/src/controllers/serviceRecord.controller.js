@@ -67,6 +67,7 @@ if (!tech) {
       serviceDate,
       organizationId,
       organizationName: org.name,
+      organizationQboItemName: org.orgQboItemName,
 
       applicantName: applicantName.toUpperCase(),
       billingNumber,

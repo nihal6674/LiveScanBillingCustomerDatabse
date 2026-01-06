@@ -12,6 +12,11 @@ const serviceRecordSchema = new mongoose.Schema(
     },
     organizationName: { type: String, required: true }, // SNAPSHOT
 
+     organizationQboItemName: {
+      type: String,
+      required: true,
+    }, // ✅ NEW SNAPSHOT (QBO CUSTOMER NAME)
+
     // ---- Applicant ----
     applicantName: { type: String, required: true }, // ALL CAPS
     billingNumber: {

@@ -16,7 +16,10 @@ import {
 
 export default function Organizations() {
   const [orgs, setOrgs] = useState([]);
-  const [name, setName] = useState("");
+const [name, setName] = useState("");
+const [orgQboItemName, setOrgQboItemName] = useState("");
+
+const [editingQboName, setEditingQboName] = useState("");
   const [error, setError] = useState("");
   const [loadingAction, setLoadingAction] = useState(null);
 
@@ -40,14 +43,17 @@ export default function Organizations() {
     setError("");
 
     try {
-      await api.post("/organizations", { name });
+await api.post("/organizations", {
+  name,
+  orgQboItemName,
+});
       toast.success("Organization created successfully"); // ✅ SUCCESS
-      setName("");
+setName("");
+setOrgQboItemName("");
       loadOrgs();
     } catch (err) {
       setError(err.response?.data?.message || "Create failed");
       toast.error(msg); // ❌ FAILURE
-
     } finally {
       setLoadingAction(null);
     }
@@ -60,8 +66,10 @@ export default function Organizations() {
     setLoadingAction(`save-${id}`);
     try {
       await api.put(`/organizations/${id}`, {
-        name: editingName,
-      });
+  name: editingName,
+  orgQboItemName: editingQboName,
+});
+
       toast.success("Organization updated"); // ✅
 
       setEditingId(null);
@@ -76,59 +84,51 @@ export default function Organizations() {
 
   /* ---------- ACTIVATE / DEACTIVATE ---------- */
   const changeActive = async (id) => {
-  if (loadingAction) return;
+    if (loadingAction) return;
 
-  setLoadingAction(`active-${id}`);
-  try {
-    await api.patch(`/organizations/${id}/active`);
+    setLoadingAction(`active-${id}`);
+    try {
+      await api.patch(`/organizations/${id}/active`);
 
-    toast.success("Organization status updated"); // ✅
+      toast.success("Organization status updated"); // ✅
 
-    loadOrgs();
-  } catch {
-    toast.error("Failed to update status"); // ❌
-  } finally {
-    setLoadingAction(null);
-  }
-};
-
+      loadOrgs();
+    } catch {
+      toast.error("Failed to update status"); // ❌
+    } finally {
+      setLoadingAction(null);
+    }
+  };
 
   /* ---------- SUSPEND / UNSUSPEND ---------- */
   const changeSuspend = async (id) => {
-  if (loadingAction) return;
+    if (loadingAction) return;
 
-  setLoadingAction(`suspend-${id}`);
-  try {
-    await api.patch(`/organizations/${id}/suspend`);
+    setLoadingAction(`suspend-${id}`);
+    try {
+      await api.patch(`/organizations/${id}/suspend`);
 
-    toast.success("Suspension status updated"); // ✅
+      toast.success("Suspension status updated"); // ✅
 
-    loadOrgs();
-  } catch {
-    toast.error("Failed to update suspension"); // ❌
-  } finally {
-    setLoadingAction(null);
-  }
-};
-
+      loadOrgs();
+    } catch {
+      toast.error("Failed to update suspension"); // ❌
+    } finally {
+      setLoadingAction(null);
+    }
+  };
 
   return (
     <div className="space-y-8">
       {/* HEADER */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-800">
-          Organizations
-        </h1>
+        <h1 className="text-3xl font-bold text-gray-800">Organizations</h1>
         <p className="text-gray-500 mt-1">
           Manage organizations, status, and access
         </p>
       </div>
 
-      {error && (
-        <p className="text-sm text-red-600 font-medium">
-          {error}
-        </p>
-      )}
+      {error && <p className="text-sm text-red-600 font-medium">{error}</p>}
 
       {/* CREATE */}
       <form
@@ -147,6 +147,13 @@ export default function Organizations() {
           className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
           required
         />
+        <input
+  value={orgQboItemName}
+  onChange={(e) => setOrgQboItemName(e.target.value)}
+  placeholder="Org QBO Item Name"
+  className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+  required
+/>
 
         <button
           disabled={loadingAction === "create"}
@@ -173,6 +180,8 @@ export default function Organizations() {
           <thead className="bg-gray-50 text-gray-600">
             <tr>
               <th className="px-4 py-3 text-left">Organization</th>
+              <th className="px-4 py-3 text-left">QBO Item</th>
+
               <th className="px-4 py-3 text-left">Status</th>
               <th className="px-4 py-3 text-left">Suspension</th>
               <th className="px-4 py-3 text-left">Actions</th>
@@ -195,9 +204,7 @@ export default function Organizations() {
                     {isEditing ? (
                       <input
                         value={editingName}
-                        onChange={(e) =>
-                          setEditingName(e.target.value)
-                        }
+                        onChange={(e) => setEditingName(e.target.value)}
                         className="w-full border-2 border-blue-400 bg-blue-50 rounded px-2 py-1"
                         autoFocus
                       />
@@ -208,6 +215,20 @@ export default function Organizations() {
                       </div>
                     )}
                   </td>
+                  <td className="px-4 py-3">
+  {isEditing ? (
+    <input
+      value={editingQboName}
+      onChange={(e) => setEditingQboName(e.target.value)}
+      className="w-full border-2 border-blue-400 bg-blue-50 rounded px-2 py-1"
+    />
+  ) : (
+    <span className="text-gray-600 text-sm">
+      {o.orgQboItemName}
+    </span>
+  )}
+</td>
+
 
                   {/* ACTIVE */}
                   <td className="px-4 py-3">
@@ -261,7 +282,9 @@ export default function Organizations() {
                       <button
                         onClick={() => {
                           setEditingId(o._id);
-                          setEditingName(o.name);
+setEditingName(o.name);
+setEditingQboName(o.orgQboItemName);
+
                         }}
                         className="inline-flex items-center gap-1 text-blue-600 font-semibold"
                       >
@@ -273,9 +296,7 @@ export default function Organizations() {
                       onClick={() => changeActive(o._id)}
                       disabled={loadingAction === `active-${o._id}`}
                       className={`inline-flex items-center gap-1 font-semibold ${
-                        o.active
-                          ? "text-red-600"
-                          : "text-green-600"
+                        o.active ? "text-red-600" : "text-green-600"
                       }`}
                     >
                       <Power size={14} />
@@ -286,9 +307,7 @@ export default function Organizations() {
                       onClick={() => changeSuspend(o._id)}
                       disabled={loadingAction === `suspend-${o._id}`}
                       className={`inline-flex items-center gap-1 font-semibold ${
-                        o.suspended
-                          ? "text-green-600"
-                          : "text-red-600"
+                        o.suspended ? "text-green-600" : "text-red-600"
                       }`}
                     >
                       <Ban size={14} />
@@ -316,17 +335,31 @@ export default function Organizations() {
             >
               {/* NAME */}
               {isEditing ? (
+                <>
+                
                 <input
                   value={editingName}
-                  onChange={(e) =>
-                    setEditingName(e.target.value)
-                  }
+                  onChange={(e) => setEditingName(e.target.value)}
                   className="w-full border-2 border-blue-400 bg-blue-50 rounded px-3 py-2"
-                />
+                  />
+                  <input
+  value={editingQboName}
+  onChange={(e) => setEditingQboName(e.target.value)}
+  className="w-full border-2 border-blue-400 bg-blue-50 rounded px-3 py-2"
+  placeholder="Org QBO Item Name"
+/>
+
+                  </>
+                
               ) : (
-                <div className="font-semibold text-gray-800">
-                  {o.name}
-                </div>
+                <>
+
+                <div className="font-semibold text-gray-800">{o.name}</div>
+                <div className="text-sm text-gray-500">
+  QBO: {o.orgQboItemName}
+</div>
+
+                </>
               )}
 
               {/* STATUS */}
@@ -362,8 +395,10 @@ export default function Organizations() {
               ) : (
                 <button
                   onClick={() => {
-                    setEditingId(o._id);
-                    setEditingName(o.name);
+                   setEditingId(o._id);
+setEditingName(o.name);
+setEditingQboName(o.orgQboItemName);
+
                   }}
                   className="w-full bg-blue-600 text-white py-2 rounded-lg flex justify-center gap-2"
                 >

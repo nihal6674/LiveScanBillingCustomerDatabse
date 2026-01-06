@@ -87,23 +87,23 @@ const getInvoiceNo = (r) => {
 
     // ✅ Prepare QBO-COMPLIANT rows (flat + safe)
     const rows = records.map((r) => ({
-  // 🔑 FORCE BUNDLING
+  // 🔑 ONE INVOICE PER ORG
   "Invoice No": getInvoiceNo(r),
 
-  // 👤 CLIENT-REQUESTED FORMAT
-  Customer: `${r.organizationName}:${r.qboItemName}`,
+  // 👤 QBO CUSTOMER (ORG LEVEL)
+  Customer: `${r.organizationName}:${r.organizationQboItemName}`,
 
   // 📅 DATES
   "Invoice Date": formatMMDDYYYY(r.serviceDate),
-  "Due Date": dueDate, // export date + 14 days
+  "Due Date": dueDate,
 
-  // 📦 LINE ITEM
+  // 📦 LINE ITEM (SERVICE LEVEL)
   "Product/Service": r.qboItemName,
   Qty: r.quantity,
   Rate: r.serviceRate,
   Amount: r.serviceRate * r.quantity,
 
-  // 🧾 AUDIT FIELDS (ignored by QBO)
+  // 🧾 AUDIT / INTERNAL
   Organization: r.organizationName,
   ServiceDate: formatMMDDYYYY(r.serviceDate),
   Service: r.serviceName,
@@ -113,6 +113,7 @@ const getInvoiceNo = (r) => {
   Total: (r.serviceRate + r.feeAmount) * r.quantity,
   Technician: r.technicianName,
 }));
+
 
 
     // ✅ UPDATE SERVICE RECORDS WITH BATCH INFO

@@ -3,23 +3,36 @@ const Organization = require("../models/Organization");
 // CREATE
 exports.createOrganization = async (req, res) => {
   try {
-    const { name } = req.body;
+    const { name, orgQboItemName } = req.body;
 
-    if (!name) {
-      return res.status(400).json({ message: "Organization name required" });
+    if (!name || !orgQboItemName) {
+      return res.status(400).json({
+        message: "Organization name and QBO item name are required",
+      });
     }
 
-    const exists = await Organization.findOne({ name });
+    const exists = await Organization.findOne({
+      $or: [{ name }, { orgQboItemName }],
+    });
+
     if (exists) {
-      return res.status(400).json({ message: "Organization already exists" });
+      return res.status(400).json({
+        message: "Organization name or QBO item name already exists",
+      });
     }
 
-    const org = await Organization.create({ name });
+    const org = await Organization.create({
+      name,
+      orgQboItemName,
+    });
+
     res.status(201).json(org);
   } catch (err) {
+    console.error("CREATE ORG ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 // GET ALL (Admin)
 exports.getOrganizations = async (req, res) => {
@@ -31,11 +44,12 @@ exports.getOrganizations = async (req, res) => {
   }
 };
 
+
 // UPDATE (rename)
 exports.updateOrganization = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name } = req.body;
+    const { name, orgQboItemName } = req.body;
 
     const org = await Organization.findById(id);
     if (!org) {
@@ -43,13 +57,16 @@ exports.updateOrganization = async (req, res) => {
     }
 
     if (name) org.name = name;
+    if (orgQboItemName) org.orgQboItemName = orgQboItemName;
 
     await org.save();
     res.json(org);
   } catch (err) {
+    console.error("UPDATE ORG ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 // SUSPEND / ACTIVATE
 exports.toggleSuspend = async (req, res) => {
@@ -74,6 +91,7 @@ exports.toggleSuspend = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 // ACTIVATE / DEACTIVATE (soft delete)
 exports.toggleActive = async (req, res) => {
@@ -100,6 +118,7 @@ exports.toggleActive = async (req, res) => {
 };
 
 
+
 // STAFF: get active organizations only
 exports.getActiveOrganizationsForStaff = async (req, res) => {
   try {
@@ -113,3 +132,4 @@ exports.getActiveOrganizationsForStaff = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
