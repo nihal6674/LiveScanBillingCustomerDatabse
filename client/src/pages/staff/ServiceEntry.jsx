@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axios";
 import toast from "react-hot-toast";
+import { useAuth } from "../../context/AuthContext";
+
 import {
   Calendar,
   Building2,
@@ -16,8 +18,8 @@ export default function ServiceEntry() {
   const [organizations, setOrganizations] = useState([]);
   const [services, setServices] = useState([]);
   const [fees, setFees] = useState([]);
-  const [technicians, setTechnicians] = useState([]);
-
+  const { user } = useAuth();
+console.log(user);
   const [form, setForm] = useState({
     serviceDate: new Date().toISOString().slice(0, 10),
     organizationId: "",
@@ -38,13 +40,11 @@ export default function ServiceEntry() {
       api.get("/organizations/staff"),
       api.get("/services/staff"),
       api.get("/fees/staff"),
-      api.get("/technicians/staff"),
     ])
       .then(([orgs, servs, fees, techs]) => {
         setOrganizations(orgs.data);
         setServices(servs.data);
         setFees(fees.data);
-        setTechnicians(techs.data);
       })
       .catch(() => toast.error("Failed to load dropdown data"));
   }, []);
@@ -76,6 +76,8 @@ export default function ServiceEntry() {
     setLoading(true);
 
     try {
+            console.log(form);
+
       await api.post("/service-records", form);
 
       toast.success("Service recorded successfully");
@@ -89,6 +91,7 @@ export default function ServiceEntry() {
         serviceId: "",
         feeId: "",
         technicianId: "",
+
         quantity: 1,
       }));
     } catch (err) {
@@ -311,7 +314,7 @@ const maskedValue = (value, length = 6) =>
           </select>
         </Field>
 
-        {/* TECHNICIAN */}
+        {/* TECHNICIAN
         <Field icon={<Wrench size={16} />} label="Technician">
           <select
             name="technicianId"
@@ -327,7 +330,17 @@ const maskedValue = (value, length = 6) =>
               </option>
             ))}
           </select>
-        </Field>
+        </Field> */}
+
+        {/* TECHNICIAN */}
+<Field icon={<Wrench size={16} />} label="Technician">
+  <input
+    value={user?.name || ""}
+    disabled
+    className={`${inputClass} bg-gray-100 cursor-not-allowed`}
+  />
+</Field>
+
 
         {/* QUANTITY */}
         <Field icon={<Layers size={16} />} label="Quantity">

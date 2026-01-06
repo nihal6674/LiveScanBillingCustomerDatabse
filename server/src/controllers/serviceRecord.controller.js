@@ -2,8 +2,7 @@ const ServiceRecord = require("../models/ServiceRecord");
 const Organization = require("../models/Organization");
 const Service = require("../models/Service");
 const Fee = require("../models/Fee");
-const Technician = require("../models/Technician");
-
+const User=require("../models/User")
 // STAFF: create service entry
 exports.createServiceRecord = async (req, res) => {
   try {
@@ -15,7 +14,6 @@ exports.createServiceRecord = async (req, res) => {
       serviceId,
       feeId,
       quantity = 1,
-      technicianId,
     } = req.body;
 
     if (
@@ -24,8 +22,7 @@ exports.createServiceRecord = async (req, res) => {
       !applicantName ||
       !billingNumber ||
       !serviceId ||
-      !feeId ||
-      !technicianId
+      !feeId 
     ) {
       return res.status(400).json({ message: "Missing required fields" });
     }
@@ -59,13 +56,11 @@ exports.createServiceRecord = async (req, res) => {
     }
 
     // ---- Technician ----
-    const tech = await Technician.findOne({
-      _id: technicianId,
-      active: true,
-    });
-    if (!tech) {
-      return res.status(400).json({ message: "Invalid technician" });
-    }
+   // ---- Technician (from logged-in user) ----
+const tech = await User.findById(req.user.userId);
+if (!tech) {
+  return res.status(400).json({ message: "Invalid technician" });
+}
 
     // ---- Create record with SNAPSHOTS ----
     const record = await ServiceRecord.create({
@@ -87,8 +82,9 @@ exports.createServiceRecord = async (req, res) => {
 
       quantity,
 
-      technicianId,
-      technicianName: tech.name,
+      technicianId: tech._id,
+technicianName: tech.name,
+
 
       enteredBy: req.user.userId,
     });
@@ -125,6 +121,13 @@ exports.updateServiceRecord = async (req, res) => {
       return res.status(403).json({ message: "Not allowed to edit this record" });
     }
 
+    if ("technicianId" in req.body || "technicianName" in req.body) {
+  return res.status(403).json({
+    message: "Technician cannot be modified once set",
+  });
+}
+
+
     const {
       serviceDate,
       organizationId,
@@ -133,7 +136,6 @@ exports.updateServiceRecord = async (req, res) => {
       serviceId,
       feeId,
       quantity,
-      technicianId,
     } = req.body;
 
     /* ---------------- Organization ---------------- */
@@ -182,26 +184,14 @@ exports.updateServiceRecord = async (req, res) => {
       record.feeAmount = fee.amount;
     }
 
-    /* ---------------- Technician ---------------- */
-    if (technicianId) {
-      const tech = await Technician.findOne({
-        _id: technicianId,
-        active: true,
-      });
-      if (!tech) {
-        return res.status(400).json({ message: "Invalid technician" });
-      }
-
-      record.technicianId = technicianId;
-      record.technicianName = tech.name;
-    }
+    
 
     /* ---------------- Simple fields ---------------- */
     if (serviceDate) record.serviceDate = serviceDate;
     if (applicantName) record.applicantName = applicantName.toUpperCase();
     if (billingNumber) record.billingNumber = billingNumber;
     if (quantity !== undefined) record.quantity = quantity;
-
+    
     await record.save();
 
     res.json(record);

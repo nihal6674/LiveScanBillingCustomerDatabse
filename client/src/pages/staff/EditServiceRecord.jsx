@@ -25,16 +25,15 @@ export default function EditServiceRecord() {
   const [organizations, setOrganizations] = useState([]);
   const [services, setServices] = useState([]);
   const [fees, setFees] = useState([]);
-  const [technicians, setTechnicians] = useState([]);
 
   const [form, setForm] = useState({
     serviceDate: "",
     organizationId: "",
     applicantName: "",
     billingNumber: "",
+    confirmBillingNumber: "",
     serviceId: "",
     feeId: "",
-    technicianId: "",
     quantity: 1,
   });
 
@@ -44,14 +43,12 @@ export default function EditServiceRecord() {
       api.get("/organizations/staff"),
       api.get("/services/staff"),
       api.get("/fees/staff"),
-      api.get("/technicians/staff"),
       api.get(`/service-records/${id}`),
     ])
-      .then(([orgs, servs, fees, techs, record]) => {
+      .then(([orgs, servs, fees, record]) => {
         setOrganizations(orgs.data);
         setServices(servs.data);
         setFees(fees.data);
-        setTechnicians(techs.data);
 
         const r = record.data;
         if (r.billed) {
@@ -64,9 +61,9 @@ export default function EditServiceRecord() {
           organizationId: r.organizationId,
           applicantName: r.applicantName,
           billingNumber: r.billingNumber,
+          confirmBillingNumber: r.billingNumber,
           serviceId: r.serviceId,
           feeId: r.feeId,
-          technicianId: r.technicianId,
           quantity: r.quantity,
         });
       })
@@ -86,6 +83,10 @@ export default function EditServiceRecord() {
     e.preventDefault();
     if (saving) return;
 
+    if (form.billingNumber !== form.confirmBillingNumber) {
+   toast.error("Billing numbers do not match");
+   return;
+ }
     setSaving(true);
     setError("");
 
@@ -115,6 +116,14 @@ export default function EditServiceRecord() {
       </div>
     );
 
+    const billingMismatch =
+  form.confirmBillingNumber.length > 0 &&
+  form.billingNumber !== form.confirmBillingNumber;
+
+const maskedValue = (value, length = 6) =>
+  value + "X".repeat(Math.max(0, length - value.length));
+
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* HEADER */}
@@ -130,8 +139,23 @@ export default function EditServiceRecord() {
       {/* FORM */}
       <form
         onSubmit={handleSubmit}
+        autoComplete="off"
         className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 space-y-6"
       >
+        {/* Chrome autofill trap */}
+<input
+  type="text"
+  name="username"
+  autoComplete="username"
+  className="hidden"
+/>
+<input
+  type="password"
+  name="password"
+  autoComplete="current-password"
+  className="hidden"
+/>
+
         <Field icon={<Calendar size={16} />} label="Service Date">
           <input
             type="date"
@@ -161,25 +185,111 @@ export default function EditServiceRecord() {
         </Field>
 
         <Field icon={<User size={16} />} label="Applicant Name">
-          <input
-            name="applicantName"
-            value={form.applicantName}
-            onChange={handleChange}
-            className={inputClass}
-            required
-          />
-        </Field>
+  <input
+    type="text"
+    name="applicantName"
+    value={form.applicantName}
+    placeholder="e.g. Sample Applicant"
+    onChange={(e) => {
+      const value = e.target.value
+        .replace(/[^a-zA-Z\s]/g, "")
+        .toUpperCase();
 
-        <Field icon={<Hash size={16} />} label="Billing Number">
-          <input
-            name="billingNumber"
-            value={form.billingNumber}
-            onChange={handleChange}
-            pattern="\d{6}"
-            className={inputClass}
-            required
-          />
-        </Field>
+      handleChange({
+        target: { name: "applicantName", value },
+      });
+    }}
+    className={inputClass}
+    required
+  />
+</Field>
+
+
+        <Field icon={<Hash size={16} />} label="Billing Number (6 digits)">
+  <div className="relative">
+    <input
+      type="text"
+      name="billingNumber"
+      autoComplete="new-password"
+      value={form.billingNumber}
+      onChange={(e) => {
+        const value = e.target.value.replace(/\D/g, "").slice(0, 6);
+        handleChange({
+          target: { name: "billingNumber", value },
+        });
+      }}
+      inputMode="numeric"
+      maxLength={6}
+      className={`
+        ${inputClass}
+        bg-transparent relative z-10
+        ${
+          form.billingNumber.length < 6
+            ? "text-transparent caret-black"
+            : "text-black"
+        }
+      `}
+      required
+    />
+
+    {form.billingNumber.length < 6 && (
+      <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center z-0">
+        <span className="font-mono text-gray-400">
+          {maskedValue(form.billingNumber)}
+        </span>
+      </div>
+    )}
+  </div>
+</Field>
+<Field icon={<Hash size={16} />} label="Confirm Billing Number">
+  <div className="relative">
+    <input
+      type="text"
+      name="confirmBillingNumber"
+      autoComplete="new-password"
+      value={form.confirmBillingNumber}
+      onChange={(e) => {
+        const value = e.target.value.replace(/\D/g, "").slice(0, 6);
+        handleChange({
+          target: { name: "confirmBillingNumber", value },
+        });
+      }}
+      inputMode="numeric"
+      maxLength={6}
+      className={`
+        ${inputClass}
+        bg-transparent relative z-10
+        ${
+          form.confirmBillingNumber.length < 6
+            ? "text-transparent caret-black"
+            : "text-black"
+        }
+        ${
+          billingMismatch
+            ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+            : ""
+        }
+      `}
+      required
+    />
+
+    {form.confirmBillingNumber.length < 6 && (
+      <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center z-0">
+        <span className="font-mono text-gray-400">
+          {maskedValue(form.confirmBillingNumber)}
+        </span>
+      </div>
+    )}
+  </div>
+
+  {billingMismatch && (
+    <p className="mt-1 text-sm text-red-600">
+      Billing numbers do not match
+    </p>
+  )}
+</Field>
+
+
 
         <Field icon={<Briefcase size={16} />} label="Service">
           <select
@@ -215,22 +325,7 @@ export default function EditServiceRecord() {
           </select>
         </Field>
 
-        <Field icon={<Wrench size={16} />} label="Technician">
-          <select
-            name="technicianId"
-            value={form.technicianId}
-            onChange={handleChange}
-            className={inputClass}
-            required
-          >
-            <option value="">Select technician</option>
-            {technicians.map((t) => (
-              <option key={t._id} value={t._id}>
-                {t.name}
-              </option>
-            ))}
-          </select>
-        </Field>
+       
 
         <Field icon={<Layers size={16} />} label="Quantity">
           <select
