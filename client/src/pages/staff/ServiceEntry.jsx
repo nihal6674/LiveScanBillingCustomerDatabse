@@ -23,6 +23,7 @@ export default function ServiceEntry() {
     organizationId: "",
     applicantName: "",
     billingNumber: "",
+    confirmBillingNumber: "", // 👈 NEW
     serviceId: "",
     feeId: "",
     technicianId: "",
@@ -45,9 +46,7 @@ export default function ServiceEntry() {
         setFees(fees.data);
         setTechnicians(techs.data);
       })
-      .catch(() =>
-        toast.error("Failed to load dropdown data")
-      );
+      .catch(() => toast.error("Failed to load dropdown data"));
   }, []);
 
   /* ---------- Handle input ---------- */
@@ -59,6 +58,19 @@ export default function ServiceEntry() {
   /* ---------- Submit ---------- */
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (form.billingNumber !== form.confirmBillingNumber) {
+      toast.error("Billing numbers do not match");
+      setLoading(false);
+      return;
+    }
+
+    if (form.billingNumber.length !== 6) {
+      toast.error("Billing number must be exactly 6 digits");
+      setLoading(false);
+      return;
+    }
+
     if (loading) return;
 
     setLoading(true);
@@ -73,38 +85,48 @@ export default function ServiceEntry() {
         ...prev,
         applicantName: "",
         billingNumber: "",
+        confirmBillingNumber: "", // 👈 reset
         serviceId: "",
         feeId: "",
         technicianId: "",
         quantity: 1,
       }));
     } catch (err) {
-      toast.error(
-        err.response?.data?.message ||
-          "Failed to submit service"
-      );
+      toast.error(err.response?.data?.message || "Failed to submit service");
     } finally {
       setLoading(false);
     }
   };
 
+  const billingMismatch =
+    form.confirmBillingNumber.length > 0 &&
+    form.billingNumber !== form.confirmBillingNumber;
+  const billingCharCount = form.billingNumber.length;
+const maskedValue = (value, length = 6) =>
+  value + "X".repeat(Math.max(0, length - value.length));
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* HEADER */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-800">
-          Service Entry
-        </h1>
-        <p className="text-gray-500 mt-1">
-          Record a new live scan service
-        </p>
+        <h1 className="text-3xl font-bold text-gray-800">Service Entry</h1>
+        <p className="text-gray-500 mt-1">Record a new live scan service</p>
       </div>
 
       {/* FORM */}
       <form
         onSubmit={handleSubmit}
+        autoComplete="off"
         className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 space-y-6"
       >
+        {/* Chrome autofill trap */}
+        <input
+          type="text"
+          name="fake-billing"
+          autoComplete="username"
+          className="hidden"
+        />
+
         {/* DATE */}
         <Field icon={<Calendar size={16} />} label="Service Date">
           <input
@@ -136,36 +158,121 @@ export default function ServiceEntry() {
         </Field>
 
         {/* APPLICANT */}
-        <Field icon={<User size={16} />} label="Applicant Name">
-          <input
-            name="applicantName"
-            value={form.applicantName}
-            onChange={handleChange}
-            className={inputClass}
-            required
-          />
-        </Field>
-
-        {/* BILLING NUMBER */}
-        <Field icon={<Hash size={16} />} label="Billing Number (6 digits)">
+<Field icon={<User size={16} />} label="Applicant Name">
   <input
     type="text"
-    name="billingNumber"
-    value={form.billingNumber}
+    name="applicantName"
+    value={form.applicantName}
+        placeholder="e.g. Sample Applicant"
+
     onChange={(e) => {
-      // allow only digits and max 6 chars
-      const value = e.target.value.replace(/\D/g, "").slice(0, 6);
+      // allow only letters and spaces
+      const value = e.target.value
+  .replace(/[^a-zA-Z\s]/g, "")
+  .toUpperCase();
+
       handleChange({
-        target: { name: "billingNumber", value },
+        target: { name: "applicantName", value },
       });
     }}
-    inputMode="numeric"
-    pattern="\d{6}"
-    maxLength={6}
     className={inputClass}
     required
   />
 </Field>
+
+
+       {/* BILLING NUMBER */}
+<Field icon={<Hash size={16} />} label="Billing Number (6 digits)">
+  <div className="relative">
+    {/* REAL INPUT */}
+    <input
+      type="text"
+      name="billingNumber"
+      autoComplete="new-password"
+      value={form.billingNumber}
+      onChange={(e) => {
+        const value = e.target.value.replace(/\D/g, "").slice(0, 6);
+        handleChange({
+          target: { name: "billingNumber", value },
+        });
+      }}
+      inputMode="numeric"
+      maxLength={6}
+      className={`
+        ${inputClass}
+        bg-transparent relative z-10
+        ${
+          form.billingNumber.length < 6
+            ? "text-transparent caret-black"
+            : "text-black"
+        }
+      `}
+      required
+    />
+
+    {/* MASKED PLACEHOLDER (INSIDE INPUT) */}
+    {form.billingNumber.length < 6 && (
+      <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center z-0">
+        <span className="font-mono text-black">
+          {maskedValue(form.billingNumber)}
+        </span>
+      </div>
+    )}
+  </div>
+</Field>
+
+
+
+
+{/* CONFIRM BILLING NUMBER */}
+<Field icon={<Hash size={16} />} label="Confirm Billing Number">
+  <div className="relative">
+    {/* REAL INPUT */}
+    <input
+      type="text"
+      name="confirmBillingNumber"
+      autoComplete="new-password"
+      value={form.confirmBillingNumber}
+      onChange={(e) => {
+        const value = e.target.value.replace(/\D/g, "").slice(0, 6);
+        handleChange({
+          target: { name: "confirmBillingNumber", value },
+        });
+      }}
+      inputMode="numeric"
+      maxLength={6}
+      className={`
+        ${inputClass}
+        bg-transparent relative z-10
+        ${
+          form.confirmBillingNumber.length < 6
+            ? "text-transparent caret-black"
+            : "text-black"
+        }
+        ${billingMismatch ? "border-red-500 focus:ring-red-500 focus:border-red-500" : ""}
+      `}
+      required
+    />
+
+    {/* MASKED PLACEHOLDER (INSIDE INPUT) */}
+    {form.confirmBillingNumber.length < 6 && (
+      <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center z-0">
+        <span className="font-mono text-black">
+          {maskedValue(form.confirmBillingNumber)}
+        </span>
+      </div>
+    )}
+  </div>
+
+  {/* INLINE ERROR */}
+  {billingMismatch && (
+    <p className="mt-1 text-sm text-red-600">
+      Numbers do not match
+    </p>
+  )}
+</Field>
+
+
 
 
         {/* SERVICE */}
