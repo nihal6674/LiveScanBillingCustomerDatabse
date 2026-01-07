@@ -86,33 +86,62 @@ const getInvoiceNo = (r) => {
 
 
     // ✅ Prepare QBO-COMPLIANT rows (flat + safe)
-    const rows = records.map((r) => ({
-  // 🔑 ONE INVOICE PER ORG
-  "Invoice No": getInvoiceNo(r),
+   const rows = records.flatMap((r) => {
+  const baseRow = {
+    // 🔑 ONE INVOICE PER ORG
+    "Invoice No": getInvoiceNo(r),
 
-  // 👤 QBO CUSTOMER (ORG LEVEL)
-  Customer: `${r.organizationName}:${r.organizationQboItemName}`,
+    // 👤 QBO CUSTOMER
+    Customer: `${r.organizationName}:${r.organizationQboItemName}`,
 
-  // 📅 DATES
-  "Invoice Date": formatMMDDYYYY(r.serviceDate),
-  "Due Date": dueDate,
+    // 📅 DATES
+    "Invoice Date": formatMMDDYYYY(exportDate),
+    "Due Date": dueDate,
 
-  // 📦 LINE ITEM (SERVICE LEVEL)
-  "Product/Service": r.qboItemName,
-  Qty: r.quantity,
-  Rate: r.serviceRate,
-  Amount: r.serviceRate * r.quantity,
+    // 🧾 AUDIT / INTERNAL
+    Organization: r.organizationName,
+    ServiceDate: formatMMDDYYYY(r.serviceDate),
+    Applicant: r.applicantName,
+    BillingNumber: r.billingNumber,
+    Technician: r.technicianName,
+  };
 
-  // 🧾 AUDIT / INTERNAL
-  Organization: r.organizationName,
-  ServiceDate: formatMMDDYYYY(r.serviceDate),
-  Service: r.serviceName,
-  Applicant: r.applicantName,
-  BillingNumber: r.billingNumber,
-  "DOJ/FBI Fee": r.feeAmount,
-  Total: (r.serviceRate + r.feeAmount) * r.quantity,
-  Technician: r.technicianName,
-}));
+  const serviceRow = {
+    ...baseRow,
+
+    // 📦 SERVICE LINE ITEM
+    "Product/Service": r.qboItemName,
+"Item Quantity": r.quantity,
+    Rate: r.serviceRate,
+    Amount: r.serviceRate * r.quantity,
+
+    Service: r.serviceName,
+    "DOJ/FBI Fee": 0,
+    Total: r.serviceRate * r.quantity,
+  };
+
+  // 👉 If NO DOJ/FBI fee
+  if (!r.feeAmount || r.feeAmount === 0) {
+    return [serviceRow];
+  }
+
+  // 👉 DOJ/FBI FEE LINE ITEM
+  const feeRow = {
+    ...baseRow,
+
+    "Product/Service": "Live Scan DOJ/FBI Fee:Live Scan DOJ/FBI Fee",
+    Qty: r.quantity,
+    Rate: r.feeAmount,
+    Amount: r.feeAmount * r.quantity,
+
+    Service: "DOJ/FBI Fee",
+    "DOJ/FBI Fee": r.feeAmount,
+    Total: r.feeAmount * r.quantity,
+  };
+
+  return [serviceRow, feeRow];
+});
+
 
 
 

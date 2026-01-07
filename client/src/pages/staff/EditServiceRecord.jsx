@@ -13,6 +13,8 @@ import {
   Layers,
   AlertTriangle,
 } from "lucide-react";
+const DOJ_ENABLED_BILLING = "148435";
+
 
 export default function EditServiceRecord() {
   const { id } = useParams();
@@ -25,6 +27,7 @@ export default function EditServiceRecord() {
   const [organizations, setOrganizations] = useState([]);
   const [services, setServices] = useState([]);
   const [fees, setFees] = useState([]);
+const [zeroDojFeeId, setZeroDojFeeId] = useState("");
 
   const [form, setForm] = useState({
     serviceDate: "",
@@ -48,7 +51,17 @@ export default function EditServiceRecord() {
       .then(([orgs, servs, fees, record]) => {
         setOrganizations(orgs.data);
         setServices(servs.data);
-        setFees(fees.data);
+       setFees(fees.data);
+
+// find DOJ-1 ($0)
+const zeroFee = fees.data.find(
+  (f) => f.amount === 0 && f.label === "DOJ-1"
+);
+
+if (zeroFee) {
+  setZeroDojFeeId(zeroFee._id);
+}
+
 
         const r = record.data;
         if (r.billed) {
@@ -105,6 +118,21 @@ export default function EditServiceRecord() {
       setSaving(false);
     }
   };
+ const billingMismatch =
+  form.confirmBillingNumber.length > 0 &&
+  form.billingNumber !== form.confirmBillingNumber;
+
+const maskedValue = (value, length = 6) =>
+  value + "X".repeat(Math.max(0, length - value.length));
+const isDojDisabled = form.billingNumber !== DOJ_ENABLED_BILLING;
+useEffect(() => {
+  if (isDojDisabled && zeroDojFeeId) {
+    setForm((prev) => ({
+      ...prev,
+      feeId: zeroDojFeeId || "",
+    }));
+  }
+}, [isDojDisabled, zeroDojFeeId]);
 
   if (loading) return <PageLoader />;
 
@@ -116,13 +144,10 @@ export default function EditServiceRecord() {
       </div>
     );
 
-    const billingMismatch =
-  form.confirmBillingNumber.length > 0 &&
-  form.billingNumber !== form.confirmBillingNumber;
-
-const maskedValue = (value, length = 6) =>
-  value + "X".repeat(Math.max(0, length - value.length));
-
+   
+const blockClipboard = (e) => {
+  e.preventDefault();
+};
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -218,6 +243,10 @@ const maskedValue = (value, length = 6) =>
           target: { name: "billingNumber", value },
         });
       }}
+      onPaste={blockClipboard}
+  onCopy={blockClipboard}
+  onCut={blockClipboard}
+  onDrop={blockClipboard}
       inputMode="numeric"
       maxLength={6}
       className={`
@@ -254,6 +283,10 @@ const maskedValue = (value, length = 6) =>
           target: { name: "confirmBillingNumber", value },
         });
       }}
+      onPaste={blockClipboard}
+  onCopy={blockClipboard}
+  onCut={blockClipboard}
+  onDrop={blockClipboard}
       inputMode="numeric"
       maxLength={6}
       className={`
@@ -308,22 +341,32 @@ const maskedValue = (value, length = 6) =>
           </select>
         </Field>
 
-        <Field icon={<BadgeDollarSign size={16} />} label="DOJ / FBI Fee">
-          <select
-            name="feeId"
-            value={form.feeId}
-            onChange={handleChange}
-            className={inputClass}
-            required
-          >
-            <option value="">Select fee</option>
-            {fees.map((f) => (
-              <option key={f._id} value={f._id}>
-                {f.label} (${f.amount})
-              </option>
-            ))}
-          </select>
-        </Field>
+       <Field icon={<BadgeDollarSign size={16} />} label="DOJ / FBI Fee">
+  <select
+    name="feeId"
+    value={form.feeId || ""}
+    onChange={handleChange}
+    disabled={isDojDisabled}
+    className={`
+      ${inputClass}
+      ${isDojDisabled ? "bg-gray-100 text-gray-500 cursor-not-allowed" : ""}
+    `}
+  >
+    {isDojDisabled ? (
+      <option value={zeroDojFeeId || ""}>DOJ-1 ($0)</option>
+    ) : (
+      <>
+        <option value="">Select fee</option>
+        {fees.map((f) => (
+          <option key={f._id} value={f._id}>
+            {f.label} (${f.amount})
+          </option>
+        ))}
+      </>
+    )}
+  </select>
+</Field>
+
 
        
 

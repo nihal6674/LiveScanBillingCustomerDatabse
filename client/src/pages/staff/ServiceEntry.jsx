@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../../api/axios";
 import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
+const DOJ_DISABLED_BILLING = "148435";
 
 import {
   Calendar,
@@ -18,6 +19,8 @@ export default function ServiceEntry() {
   const [organizations, setOrganizations] = useState([]);
   const [services, setServices] = useState([]);
   const [fees, setFees] = useState([]);
+  const [zeroDojFeeId, setZeroDojFeeId] = useState("");
+
   const { user } = useAuth();
 console.log(user);
   const [form, setForm] = useState({
@@ -41,13 +44,21 @@ console.log(user);
       api.get("/services/staff"),
       api.get("/fees/staff"),
     ])
-      .then(([orgs, servs, fees, techs]) => {
-        setOrganizations(orgs.data);
-        setServices(servs.data);
-        setFees(fees.data);
-      })
-      .catch(() => toast.error("Failed to load dropdown data"));
+      .then(([orgs, servs, feesRes]) => {
+  setOrganizations(orgs.data);
+  setServices(servs.data);
+  setFees(feesRes.data);
+
+  const zeroFee = feesRes.data.find(
+    (f) => f.amount === 0 && f.label === "DOJ-1"
+  );
+
+  if (zeroFee) {
+    setZeroDojFeeId(zeroFee._id);
+  }
+}).catch(() => toast.error("Failed to load dropdown data"));
   }, []);
+
 
   /* ---------- Handle input ---------- */
   const handleChange = (e) => {
@@ -57,49 +68,52 @@ console.log(user);
 
   /* ---------- Submit ---------- */
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (form.billingNumber !== form.confirmBillingNumber) {
-      toast.error("Billing numbers do not match");
-      setLoading(false);
-      return;
-    }
+  if (form.billingNumber !== form.confirmBillingNumber) {
+    toast.error("Billing numbers do not match");
+    return;
+  }
 
-    if (form.billingNumber.length !== 6) {
-      toast.error("Billing number must be exactly 6 digits");
-      setLoading(false);
-      return;
-    }
+  if (form.billingNumber.length !== 6) {
+    toast.error("Billing number must be exactly 6 digits");
+    return;
+  }
 
-    if (loading) return;
+  if (loading) return;
+  setLoading(true);
 
-    setLoading(true);
+  try {
+    // 🔐 Normalize payload (backend-safe)
+    const payload = {
+      ...form,
+      feeId:
+        form.billingNumber !== DOJ_DISABLED_BILLING
+          ? zeroDojFeeId
+          : form.feeId,
+    };
 
-    try {
-            console.log(form);
+    await api.post("/service-records", payload);
 
-      await api.post("/service-records", form);
+    toast.success("Service recorded successfully");
 
-      toast.success("Service recorded successfully");
+    // ✅ Reset to CLEAN state (no assumptions)
+    setForm((prev) => ({
+      ...prev,
+      applicantName: "",
+      billingNumber: "",
+      confirmBillingNumber: "",
+      serviceId: "",
+      feeId: "",        // ← IMPORTANT
+      quantity: 1,
+    }));
+  } catch (err) {
+    toast.error(err.response?.data?.message || "Failed to submit service");
+  } finally {
+    setLoading(false);
+  }
+};
 
-      // Reset (keep date)
-      setForm((prev) => ({
-        ...prev,
-        applicantName: "",
-        billingNumber: "",
-        confirmBillingNumber: "", // 👈 reset
-        serviceId: "",
-        feeId: "",
-        technicianId: "",
-
-        quantity: 1,
-      }));
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to submit service");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const billingMismatch =
     form.confirmBillingNumber.length > 0 &&
@@ -107,6 +121,20 @@ console.log(user);
   const billingCharCount = form.billingNumber.length;
 const maskedValue = (value, length = 6) =>
   value + "X".repeat(Math.max(0, length - value.length));
+const isDojDisabled = form.billingNumber !== DOJ_DISABLED_BILLING;
+useEffect(() => {
+  if (isDojDisabled && zeroDojFeeId) {
+    setForm((prev) => ({
+      ...prev,
+      feeId: zeroDojFeeId, // ✅ ALWAYS SEND VALID FEE
+    }));
+  }
+}, [isDojDisabled, zeroDojFeeId]);
+
+const blockClipboard = (e) => {
+  e.preventDefault();
+};
+
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -199,6 +227,10 @@ const maskedValue = (value, length = 6) =>
           target: { name: "billingNumber", value },
         });
       }}
+      onPaste={blockClipboard}
+  onCopy={blockClipboard}
+  onCut={blockClipboard}
+  onDrop={blockClipboard}
       inputMode="numeric"
       maxLength={6}
       className={`
@@ -242,6 +274,10 @@ const maskedValue = (value, length = 6) =>
           target: { name: "confirmBillingNumber", value },
         });
       }}
+      onPaste={blockClipboard}
+  onCopy={blockClipboard}
+  onCut={blockClipboard}
+  onDrop={blockClipboard}
       inputMode="numeric"
       maxLength={6}
       className={`
@@ -296,23 +332,33 @@ const maskedValue = (value, length = 6) =>
           </select>
         </Field>
 
-        {/* FEE */}
-        <Field icon={<BadgeDollarSign size={16} />} label="DOJ / FBI Fee">
-          <select
-            name="feeId"
-            value={form.feeId}
-            onChange={handleChange}
-            className={inputClass}
-            required
-          >
-            <option value="">Select fee</option>
-            {fees.map((f) => (
-              <option key={f._id} value={f._id}>
-                {f.label} (${f.amount})
-              </option>
-            ))}
-          </select>
-        </Field>
+        {/* DOJ / FBI Fee */}
+<Field icon={<BadgeDollarSign size={16} />} label="DOJ / FBI Fee">
+  <select
+    name="feeId"
+    value={form.feeId}
+    onChange={handleChange}
+    disabled={isDojDisabled}
+    className={`
+      ${inputClass}
+      ${isDojDisabled ? "bg-gray-100 text-gray-500 cursor-not-allowed" : ""}
+    `}
+  >
+    {isDojDisabled ? (
+      <option value={zeroDojFeeId}>DOJ-1 ($0)</option>
+    ) : (
+      <>
+        <option value="">Select fee</option>
+        {fees.map((f) => (
+          <option key={f._id} value={f._id}>
+            {f.label} (${f.amount})
+          </option>
+        ))}
+      </>
+    )}
+  </select>
+</Field>
+
 
         {/* TECHNICIAN
         <Field icon={<Wrench size={16} />} label="Technician">

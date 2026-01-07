@@ -12,7 +12,7 @@ const serviceRecordSchema = new mongoose.Schema(
     },
     organizationName: { type: String, required: true }, // SNAPSHOT
 
-     organizationQboItemName: {
+    organizationQboItemName: {
       type: String,
       required: true,
     }, // ✅ NEW SNAPSHOT (QBO CUSTOMER NAME)
@@ -39,8 +39,9 @@ const serviceRecordSchema = new mongoose.Schema(
     feeId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Fee",
-      required: true,
+      default: null,
     },
+
     feeLabel: { type: String, required: true },     // SNAPSHOT
     feeAmount: { type: Number, required: true },    // SNAPSHOT
 

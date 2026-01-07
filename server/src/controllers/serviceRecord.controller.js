@@ -3,6 +3,8 @@ const Organization = require("../models/Organization");
 const Service = require("../models/Service");
 const Fee = require("../models/Fee");
 const User=require("../models/User")
+const SPECIAL_BILLING_NUMBER = process.env.SPECIAL_DOFJ_BILLING_NUMBER;
+
 // STAFF: create service entry
 exports.createServiceRecord = async (req, res) => {
   try {
@@ -47,21 +49,31 @@ exports.createServiceRecord = async (req, res) => {
     }
 
     // ---- Fee ----
-    const fee = await Fee.findOne({
-      _id: feeId,
-      active: true,
-    });
-    if (!fee) {
-      return res.status(400).json({ message: "Invalid fee" });
-    }
+    let fee = null;
+let feeAmount = 0;
+let feeLabel = "DOJ/FBI Fee";
 
-    // ---- Technician ----
+if (billingNumber === SPECIAL_BILLING_NUMBER) {
+  fee = await Fee.findOne({
+    _id: feeId,
+    active: true,
+  });
+
+  if (!fee) {
+    return res.status(400).json({ message: "Invalid fee" });
+  }
+
+  feeAmount = fee.amount;
+  feeLabel = fee.label;
+}
+
+
    // ---- Technician (from logged-in user) ----
 const tech = await User.findById(req.user.userId);
 if (!tech) {
   return res.status(400).json({ message: "Invalid technician" });
 }
-
+console.log("ORGANIZATION:::::::::::::::::",org);
     // ---- Create record with SNAPSHOTS ----
     const record = await ServiceRecord.create({
       serviceDate,
@@ -77,9 +89,10 @@ if (!tech) {
       qboItemName: service.qboItemName,
       serviceRate: service.rate,
 
-      feeId,
-      feeLabel: fee.label,
-      feeAmount: fee.amount,
+      feeId: billingNumber === SPECIAL_BILLING_NUMBER ? feeId : null,
+feeLabel,
+feeAmount,
+
 
       quantity,
 
@@ -171,26 +184,41 @@ exports.updateServiceRecord = async (req, res) => {
     }
 
     /* ---------------- Fee ---------------- */
-    if (feeId) {
-      const fee = await Fee.findOne({
-        _id: feeId,
-        active: true,
-      });
-      if (!fee) {
-        return res.status(400).json({ message: "Invalid fee" });
-      }
+   if (billingNumber === SPECIAL_BILLING_NUMBER && feeId) {
+  const fee = await Fee.findOne({
+    _id: feeId,
+    active: true,
+  });
 
-      record.feeId = feeId;
-      record.feeLabel = fee.label;
-      record.feeAmount = fee.amount;
-    }
+  if (!fee) {
+    return res.status(400).json({ message: "Invalid fee" });
+  }
+
+  record.feeId = feeId;
+  record.feeLabel = fee.label;
+  record.feeAmount = fee.amount;
+} else {
+  // ❌ Force remove DOJ/FBI fee
+  record.feeId = null;
+  record.feeLabel = "DOJ/FBI Fee";
+  record.feeAmount = 0;
+}
 
     
 
     /* ---------------- Simple fields ---------------- */
     if (serviceDate) record.serviceDate = serviceDate;
     if (applicantName) record.applicantName = applicantName.toUpperCase();
-    if (billingNumber) record.billingNumber = billingNumber;
+if (billingNumber) {
+  record.billingNumber = billingNumber;
+
+  // Re-apply DOJ/FBI rule on billing number change
+  if (billingNumber !== SPECIAL_BILLING_NUMBER) {
+    record.feeId = null;
+    record.feeLabel = "DOJ/FBI Fee";
+    record.feeAmount = 0;
+  }
+}
     if (quantity !== undefined) record.quantity = quantity;
     
     await record.save();
