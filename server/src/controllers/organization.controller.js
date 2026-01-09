@@ -11,9 +11,11 @@ exports.createOrganization = async (req, res) => {
       });
     }
 
-    const exists = await Organization.findOne({
-      $or: [{ name }, { orgQboItemName }],
+     const exists = await Organization.findOne({
+      name: name.trim(),
+      orgQboItemName: orgQboItemName.trim(),
     });
+
 
     if (exists) {
       return res.status(400).json({

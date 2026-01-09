@@ -92,7 +92,7 @@ const getInvoiceNo = (r) => {
     "Invoice No": getInvoiceNo(r),
 
     // 👤 QBO CUSTOMER
-    Customer: `${r.organizationName}:${r.organizationQboItemName}`,
+    Customer: r.organizationQboItemName,
 
     // 📅 DATES
     "Invoice Date": formatMMDDYYYY(exportDate),
