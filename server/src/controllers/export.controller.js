@@ -98,10 +98,13 @@ const getInvoiceNo = (r) => {
     "Invoice Date": formatMMDDYYYY(exportDate),
     "Due Date": dueDate,
 
+    //Terms
+    Terms: "Net 14",
+
     // 🧾 AUDIT / INTERNAL
     Organization: r.organizationName,
     ServiceDate: formatMMDDYYYY(r.serviceDate),
-    Applicant: r.applicantName,
+    Description: r.applicantName,
     BillingNumber: r.billingNumber,
     Technician: r.technicianName,
   };
@@ -127,17 +130,18 @@ const getInvoiceNo = (r) => {
 
   // 👉 DOJ/FBI FEE LINE ITEM
   const feeRow = {
-    ...baseRow,
+  ...baseRow,
 
-    "Product/Service": "Live Scan DOJ/FBI Fee:Live Scan DOJ/FBI Fee",
-    Qty: r.quantity,
-    Rate: r.feeAmount,
-    Amount: r.feeAmount * r.quantity,
+  "Product/Service": "Live Scan DOJ/FBI Fee:Live Scan DOJ/FBI Fee",
+  "Item Quantity": r.quantity,   // ✅ FIXED
+  Rate: r.feeAmount,
+  Amount: r.feeAmount * r.quantity,
 
-    Service: "DOJ/FBI Fee",
-    "DOJ/FBI Fee": r.feeAmount,
-    Total: r.feeAmount * r.quantity,
-  };
+  Service: "DOJ/FBI Fee",
+  "DOJ/FBI Fee": r.feeAmount,
+  Total: r.feeAmount * r.quantity,
+};
+
 
   return [serviceRow, feeRow];
 });

@@ -22,7 +22,7 @@ export default function ServiceEntry() {
   const [zeroDojFeeId, setZeroDojFeeId] = useState("");
 
   const { user } = useAuth();
-console.log(user);
+  console.log(user);
   const [form, setForm] = useState({
     serviceDate: new Date().toISOString().slice(0, 10),
     organizationId: "",
@@ -45,20 +45,26 @@ console.log(user);
       api.get("/fees/staff"),
     ])
       .then(([orgs, servs, feesRes]) => {
-  setOrganizations(orgs.data);
-  setServices(servs.data);
-  setFees(feesRes.data);
+        setOrganizations(orgs.data);
+        setServices(servs.data);
+        setFees(feesRes.data);
+        if (servs.data.length === 1) {
+          setForm((prev) => ({
+            ...prev,
+            serviceId: servs.data[0]._id,
+          }));
+        }
 
-  const zeroFee = feesRes.data.find(
-    (f) => f.amount === 0 && f.label === "DOJ-1"
-  );
+        const zeroFee = feesRes.data.find(
+          (f) => f.amount === 0 && f.label === "DOJ-1"
+        );
 
-  if (zeroFee) {
-    setZeroDojFeeId(zeroFee._id);
-  }
-}).catch(() => toast.error("Failed to load dropdown data"));
+        if (zeroFee) {
+          setZeroDojFeeId(zeroFee._id);
+        }
+      })
+      .catch(() => toast.error("Failed to load dropdown data"));
   }, []);
-
 
   /* ---------- Handle input ---------- */
   const handleChange = (e) => {
@@ -68,73 +74,71 @@ console.log(user);
 
   /* ---------- Submit ---------- */
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (form.billingNumber !== form.confirmBillingNumber) {
-    toast.error("Billing numbers do not match");
-    return;
-  }
+    if (form.billingNumber !== form.confirmBillingNumber) {
+      toast.error("Billing numbers do not match");
+      return;
+    }
 
-  if (form.billingNumber.length !== 6) {
-    toast.error("Billing number must be exactly 6 digits");
-    return;
-  }
+    if (form.billingNumber.length !== 6) {
+      toast.error("Billing number must be exactly 6 digits");
+      return;
+    }
 
-  if (loading) return;
-  setLoading(true);
+    if (loading) return;
+    setLoading(true);
 
-  try {
-    // 🔐 Normalize payload (backend-safe)
-    const payload = {
-      ...form,
-      feeId:
-        form.billingNumber !== DOJ_DISABLED_BILLING
-          ? zeroDojFeeId
-          : form.feeId,
-    };
+    try {
+      // 🔐 Normalize payload (backend-safe)
+      const payload = {
+        ...form,
+        feeId:
+          form.billingNumber !== DOJ_DISABLED_BILLING
+            ? zeroDojFeeId
+            : form.feeId,
+      };
 
-    await api.post("/service-records", payload);
+      await api.post("/service-records", payload);
 
-    toast.success("Service recorded successfully");
+      toast.success("Service recorded successfully");
 
-    // ✅ Reset to CLEAN state (no assumptions)
-    setForm((prev) => ({
-      ...prev,
-      applicantName: "",
-      billingNumber: "",
-      confirmBillingNumber: "",
-      serviceId: "",
-      feeId: "",        // ← IMPORTANT
-      quantity: 1,
-    }));
-  } catch (err) {
-    toast.error(err.response?.data?.message || "Failed to submit service");
-  } finally {
-    setLoading(false);
-  }
-};
-
+      // ✅ Reset to CLEAN state (no assumptions)
+      setForm((prev) => ({
+        ...prev,
+        organizationId: "",
+        applicantName: "",
+        billingNumber: "",
+        confirmBillingNumber: "",
+        feeId: "", // ← IMPORTANT
+        quantity: 1,
+      }));
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to submit service");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const billingMismatch =
     form.confirmBillingNumber.length > 0 &&
     form.billingNumber !== form.confirmBillingNumber;
   const billingCharCount = form.billingNumber.length;
-const maskedValue = (value, length = 6) =>
-  value + "X".repeat(Math.max(0, length - value.length));
-const isDojDisabled = form.billingNumber !== DOJ_DISABLED_BILLING;
-useEffect(() => {
-  if (isDojDisabled && zeroDojFeeId) {
-    setForm((prev) => ({
-      ...prev,
-      feeId: zeroDojFeeId, // ✅ ALWAYS SEND VALID FEE
-    }));
-  }
-}, [isDojDisabled, zeroDojFeeId]);
+  const maskedValue = (value, length = 6) =>
+    value + "X".repeat(Math.max(0, length - value.length));
+  const isDojDisabled = form.billingNumber !== DOJ_DISABLED_BILLING;
+  useEffect(() => {
+    if (isDojDisabled && zeroDojFeeId) {
+      setForm((prev) => ({
+        ...prev,
+        feeId: zeroDojFeeId, // ✅ ALWAYS SEND VALID FEE
+      }));
+    }
+  }, [isDojDisabled, zeroDojFeeId]);
 
-const blockClipboard = (e) => {
-  e.preventDefault();
-};
-
+  const blockClipboard = (e) => {
+    e.preventDefault();
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -189,51 +193,49 @@ const blockClipboard = (e) => {
         </Field>
 
         {/* APPLICANT */}
-<Field icon={<User size={16} />} label="Applicant Name">
-  <input
-    type="text"
-    name="applicantName"
-    value={form.applicantName}
-        placeholder="e.g. Sample Applicant"
+        <Field icon={<User size={16} />} label="Applicant Name">
+          <input
+            type="text"
+            name="applicantName"
+            value={form.applicantName}
+            placeholder="e.g. Sample Applicant"
+            onChange={(e) => {
+              // allow only letters and spaces
+              const value = e.target.value
+                .replace(/[^a-zA-Z\s]/g, "")
+                .toUpperCase();
 
-    onChange={(e) => {
-      // allow only letters and spaces
-      const value = e.target.value
-  .replace(/[^a-zA-Z\s]/g, "")
-  .toUpperCase();
+              handleChange({
+                target: { name: "applicantName", value },
+              });
+            }}
+            className={inputClass}
+            required
+          />
+        </Field>
 
-      handleChange({
-        target: { name: "applicantName", value },
-      });
-    }}
-    className={inputClass}
-    required
-  />
-</Field>
-
-
-       {/* BILLING NUMBER */}
-<Field icon={<Hash size={16} />} label="Billing Number (6 digits)">
-  <div className="relative">
-    {/* REAL INPUT */}
-    <input
-      type="text"
-      name="billingNumber"
-      autoComplete="new-password"
-      value={form.billingNumber}
-      onChange={(e) => {
-        const value = e.target.value.replace(/\D/g, "").slice(0, 6);
-        handleChange({
-          target: { name: "billingNumber", value },
-        });
-      }}
-      onPaste={blockClipboard}
-  onCopy={blockClipboard}
-  onCut={blockClipboard}
-  onDrop={blockClipboard}
-      inputMode="numeric"
-      maxLength={6}
-      className={`
+        {/* BILLING NUMBER */}
+        <Field icon={<Hash size={16} />} label="Billing Number (6 digits)">
+          <div className="relative">
+            {/* REAL INPUT */}
+            <input
+              type="text"
+              name="billingNumber"
+              autoComplete="new-password"
+              value={form.billingNumber}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, "").slice(0, 6);
+                handleChange({
+                  target: { name: "billingNumber", value },
+                });
+              }}
+              onPaste={blockClipboard}
+              onCopy={blockClipboard}
+              onCut={blockClipboard}
+              onDrop={blockClipboard}
+              inputMode="numeric"
+              maxLength={6}
+              className={`
         ${inputClass}
         bg-transparent relative z-10
         ${
@@ -242,45 +244,42 @@ const blockClipboard = (e) => {
             : "text-black"
         }
       `}
-      required
-    />
+              required
+            />
 
-    {/* MASKED PLACEHOLDER (INSIDE INPUT) */}
-    {form.billingNumber.length < 6 && (
-      <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center z-0">
-        <span className="font-mono text-black">
-          {maskedValue(form.billingNumber)}
-        </span>
-      </div>
-    )}
-  </div>
-</Field>
+            {/* MASKED PLACEHOLDER (INSIDE INPUT) */}
+            {form.billingNumber.length < 6 && (
+              <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center z-0">
+                <span className="font-mono text-black">
+                  {maskedValue(form.billingNumber)}
+                </span>
+              </div>
+            )}
+          </div>
+        </Field>
 
-
-
-
-{/* CONFIRM BILLING NUMBER */}
-<Field icon={<Hash size={16} />} label="Confirm Billing Number">
-  <div className="relative">
-    {/* REAL INPUT */}
-    <input
-      type="text"
-      name="confirmBillingNumber"
-      autoComplete="new-password"
-      value={form.confirmBillingNumber}
-      onChange={(e) => {
-        const value = e.target.value.replace(/\D/g, "").slice(0, 6);
-        handleChange({
-          target: { name: "confirmBillingNumber", value },
-        });
-      }}
-      onPaste={blockClipboard}
-  onCopy={blockClipboard}
-  onCut={blockClipboard}
-  onDrop={blockClipboard}
-      inputMode="numeric"
-      maxLength={6}
-      className={`
+        {/* CONFIRM BILLING NUMBER */}
+        <Field icon={<Hash size={16} />} label="Confirm Billing Number">
+          <div className="relative">
+            {/* REAL INPUT */}
+            <input
+              type="text"
+              name="confirmBillingNumber"
+              autoComplete="new-password"
+              value={form.confirmBillingNumber}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, "").slice(0, 6);
+                handleChange({
+                  target: { name: "confirmBillingNumber", value },
+                });
+              }}
+              onPaste={blockClipboard}
+              onCopy={blockClipboard}
+              onCut={blockClipboard}
+              onDrop={blockClipboard}
+              inputMode="numeric"
+              maxLength={6}
+              className={`
         ${inputClass}
         bg-transparent relative z-10
         ${
@@ -288,31 +287,30 @@ const blockClipboard = (e) => {
             ? "text-transparent caret-black"
             : "text-black"
         }
-        ${billingMismatch ? "border-red-500 focus:ring-red-500 focus:border-red-500" : ""}
+        ${
+          billingMismatch
+            ? "border-red-500 focus:ring-red-500 focus:border-red-500"
+            : ""
+        }
       `}
-      required
-    />
+              required
+            />
 
-    {/* MASKED PLACEHOLDER (INSIDE INPUT) */}
-    {form.confirmBillingNumber.length < 6 && (
-      <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center z-0">
-        <span className="font-mono text-black">
-          {maskedValue(form.confirmBillingNumber)}
-        </span>
-      </div>
-    )}
-  </div>
+            {/* MASKED PLACEHOLDER (INSIDE INPUT) */}
+            {form.confirmBillingNumber.length < 6 && (
+              <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center z-0">
+                <span className="font-mono text-black">
+                  {maskedValue(form.confirmBillingNumber)}
+                </span>
+              </div>
+            )}
+          </div>
 
-  {/* INLINE ERROR */}
-  {billingMismatch && (
-    <p className="mt-1 text-sm text-red-600">
-      Numbers do not match
-    </p>
-  )}
-</Field>
-
-
-
+          {/* INLINE ERROR */}
+          {billingMismatch && (
+            <p className="mt-1 text-sm text-red-600">Numbers do not match</p>
+          )}
+        </Field>
 
         {/* SERVICE */}
         <Field icon={<Briefcase size={16} />} label="Service">
@@ -333,32 +331,31 @@ const blockClipboard = (e) => {
         </Field>
 
         {/* DOJ / FBI Fee */}
-<Field icon={<BadgeDollarSign size={16} />} label="DOJ / FBI Fee">
-  <select
-    name="feeId"
-    value={form.feeId}
-    onChange={handleChange}
-    disabled={isDojDisabled}
-    className={`
+        <Field icon={<BadgeDollarSign size={16} />} label="DOJ / FBI Fee">
+          <select
+            name="feeId"
+            value={form.feeId}
+            onChange={handleChange}
+            disabled={isDojDisabled}
+            className={`
       ${inputClass}
       ${isDojDisabled ? "bg-gray-100 text-gray-500 cursor-not-allowed" : ""}
     `}
-  >
-    {isDojDisabled ? (
-      <option value={zeroDojFeeId}>DOJ-1 ($0)</option>
-    ) : (
-      <>
-        <option value="">Select fee</option>
-        {fees.map((f) => (
-          <option key={f._id} value={f._id}>
-            {f.label} (${f.amount})
-          </option>
-        ))}
-      </>
-    )}
-  </select>
-</Field>
-
+          >
+            {isDojDisabled ? (
+              <option value={zeroDojFeeId}>DOJ-1 ($0)</option>
+            ) : (
+              <>
+                <option value="">Select fee</option>
+                {fees.map((f) => (
+                  <option key={f._id} value={f._id}>
+                    {f.label} (${f.amount})
+                  </option>
+                ))}
+              </>
+            )}
+          </select>
+        </Field>
 
         {/* TECHNICIAN
         <Field icon={<Wrench size={16} />} label="Technician">
@@ -379,14 +376,13 @@ const blockClipboard = (e) => {
         </Field> */}
 
         {/* TECHNICIAN */}
-<Field icon={<Wrench size={16} />} label="Technician">
-  <input
-    value={user?.name || ""}
-    disabled
-    className={`${inputClass} bg-gray-100 cursor-not-allowed`}
-  />
-</Field>
-
+        <Field icon={<Wrench size={16} />} label="Technician">
+          <input
+            value={user?.name || ""}
+            disabled
+            className={`${inputClass} bg-gray-100 cursor-not-allowed`}
+          />
+        </Field>
 
         {/* QUANTITY */}
         <Field icon={<Layers size={16} />} label="Quantity">
