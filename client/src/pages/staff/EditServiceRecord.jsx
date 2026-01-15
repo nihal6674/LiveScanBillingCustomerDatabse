@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import api from "../../api/axios";
 import toast from "react-hot-toast";
 import {
@@ -16,7 +16,6 @@ import {
 import { useAuth } from "../../context/AuthContext";
 const DOJ_ENABLED_BILLING = "148435";
 
-
 export default function EditServiceRecord() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -24,13 +23,15 @@ export default function EditServiceRecord() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const {user}=useAuth();
-  const basePath=user.role==="ADMIN"?"/admin":"/staff";
+  const { user } = useAuth();
+  const basePath = user.role === "ADMIN" ? "/admin" : "/staff";
   const [organizations, setOrganizations] = useState([]);
   const [services, setServices] = useState([]);
   const [fees, setFees] = useState([]);
-const [zeroDojFeeId, setZeroDojFeeId] = useState("");
-
+  const [zeroDojFeeId, setZeroDojFeeId] = useState("");
+  const location = useLocation();
+  const from =
+    location.state?.from === "all-entries" ? "all-entries" : "my-entries";
   const [form, setForm] = useState({
     serviceDate: "",
     organizationId: "",
@@ -53,17 +54,16 @@ const [zeroDojFeeId, setZeroDojFeeId] = useState("");
       .then(([orgs, servs, fees, record]) => {
         setOrganizations(orgs.data);
         setServices(servs.data);
-       setFees(fees.data);
+        setFees(fees.data);
 
-// find DOJ-1 ($0)
-const zeroFee = fees.data.find(
-  (f) => f.amount === 0 && f.label === "DOJ-1"
-);
+        // find DOJ-1 ($0)
+        const zeroFee = fees.data.find(
+          (f) => f.amount === 0 && f.label === "DOJ-1"
+        );
 
-if (zeroFee) {
-  setZeroDojFeeId(zeroFee._id);
-}
-
+        if (zeroFee) {
+          setZeroDojFeeId(zeroFee._id);
+        }
 
         const r = record.data;
         if (r.billed) {
@@ -99,9 +99,9 @@ if (zeroFee) {
     if (saving) return;
 
     if (form.billingNumber !== form.confirmBillingNumber) {
-   toast.error("Billing numbers do not match");
-   return;
- }
+      toast.error("Billing numbers do not match");
+      return;
+    }
     setSaving(true);
     setError("");
 
@@ -110,31 +110,30 @@ if (zeroFee) {
 
       toast.success("Service record updated successfully");
 
-      navigate(`${basePath}/my-entries`);
+      navigate(`${basePath}/${from}`);
     } catch (err) {
-      const msg =
-        err.response?.data?.message || "Update failed";
+      const msg = err.response?.data?.message || "Update failed";
       setError(msg);
       toast.error(msg);
     } finally {
       setSaving(false);
     }
   };
- const billingMismatch =
-  form.confirmBillingNumber.length > 0 &&
-  form.billingNumber !== form.confirmBillingNumber;
+  const billingMismatch =
+    form.confirmBillingNumber.length > 0 &&
+    form.billingNumber !== form.confirmBillingNumber;
 
-const maskedValue = (value, length = 6) =>
-  value + "X".repeat(Math.max(0, length - value.length));
-const isDojDisabled = form.billingNumber !== DOJ_ENABLED_BILLING;
-useEffect(() => {
-  if (isDojDisabled && zeroDojFeeId) {
-    setForm((prev) => ({
-      ...prev,
-      feeId: zeroDojFeeId || "",
-    }));
-  }
-}, [isDojDisabled, zeroDojFeeId]);
+  const maskedValue = (value, length = 6) =>
+    value + "X".repeat(Math.max(0, length - value.length));
+  const isDojDisabled = form.billingNumber !== DOJ_ENABLED_BILLING;
+  useEffect(() => {
+    if (isDojDisabled && zeroDojFeeId) {
+      setForm((prev) => ({
+        ...prev,
+        feeId: zeroDojFeeId || "",
+      }));
+    }
+  }, [isDojDisabled, zeroDojFeeId]);
 
   if (loading) return <PageLoader />;
 
@@ -146,10 +145,9 @@ useEffect(() => {
       </div>
     );
 
-   
-const blockClipboard = (e) => {
-  e.preventDefault();
-};
+  const blockClipboard = (e) => {
+    e.preventDefault();
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -158,9 +156,7 @@ const blockClipboard = (e) => {
         <h1 className="text-3xl font-bold text-gray-800">
           Edit Service Record
         </h1>
-        <p className="text-gray-500 mt-1">
-          Modify details before billing
-        </p>
+        <p className="text-gray-500 mt-1">Modify details before billing</p>
       </div>
 
       {/* FORM */}
@@ -170,18 +166,18 @@ const blockClipboard = (e) => {
         className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 space-y-6"
       >
         {/* Chrome autofill trap */}
-<input
-  type="text"
-  name="username"
-  autoComplete="username"
-  className="hidden"
-/>
-<input
-  type="password"
-  name="password"
-  autoComplete="current-password"
-  className="hidden"
-/>
+        <input
+          type="text"
+          name="username"
+          autoComplete="username"
+          className="hidden"
+        />
+        <input
+          type="password"
+          name="password"
+          autoComplete="current-password"
+          className="hidden"
+        />
 
         <Field icon={<Calendar size={16} />} label="Service Date">
           <input
@@ -212,46 +208,45 @@ const blockClipboard = (e) => {
         </Field>
 
         <Field icon={<User size={16} />} label="Applicant Name">
-  <input
-    type="text"
-    name="applicantName"
-    value={form.applicantName}
-    placeholder="e.g. Sample Applicant"
-    onChange={(e) => {
-      const value = e.target.value
-        .replace(/[^a-zA-Z\s]/g, "")
-        .toUpperCase();
+          <input
+            type="text"
+            name="applicantName"
+            value={form.applicantName}
+            placeholder="e.g. Sample Applicant"
+            onChange={(e) => {
+              const value = e.target.value
+                .replace(/[^a-zA-Z\s]/g, "")
+                .toUpperCase();
 
-      handleChange({
-        target: { name: "applicantName", value },
-      });
-    }}
-    className={inputClass}
-    required
-  />
-</Field>
-
+              handleChange({
+                target: { name: "applicantName", value },
+              });
+            }}
+            className={inputClass}
+            required
+          />
+        </Field>
 
         <Field icon={<Hash size={16} />} label="Billing Number (6 digits)">
-  <div className="relative">
-    <input
-      type="text"
-      name="billingNumber"
-      autoComplete="new-password"
-      value={form.billingNumber}
-      onChange={(e) => {
-        const value = e.target.value.replace(/\D/g, "").slice(0, 6);
-        handleChange({
-          target: { name: "billingNumber", value },
-        });
-      }}
-      onPaste={blockClipboard}
-  onCopy={blockClipboard}
-  onCut={blockClipboard}
-  onDrop={blockClipboard}
-      inputMode="numeric"
-      maxLength={6}
-      className={`
+          <div className="relative">
+            <input
+              type="text"
+              name="billingNumber"
+              autoComplete="new-password"
+              value={form.billingNumber}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, "").slice(0, 6);
+                handleChange({
+                  target: { name: "billingNumber", value },
+                });
+              }}
+              onPaste={blockClipboard}
+              onCopy={blockClipboard}
+              onCut={blockClipboard}
+              onDrop={blockClipboard}
+              inputMode="numeric"
+              maxLength={6}
+              className={`
         ${inputClass}
         bg-transparent relative z-10
         ${
@@ -260,38 +255,38 @@ const blockClipboard = (e) => {
             : "text-black"
         }
       `}
-      required
-    />
+              required
+            />
 
-    {form.billingNumber.length < 6 && (
-      <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center z-0">
-        <span className="font-mono text-gray-400">
-          {maskedValue(form.billingNumber)}
-        </span>
-      </div>
-    )}
-  </div>
-</Field>
-<Field icon={<Hash size={16} />} label="Confirm Billing Number">
-  <div className="relative">
-    <input
-      type="text"
-      name="confirmBillingNumber"
-      autoComplete="new-password"
-      value={form.confirmBillingNumber}
-      onChange={(e) => {
-        const value = e.target.value.replace(/\D/g, "").slice(0, 6);
-        handleChange({
-          target: { name: "confirmBillingNumber", value },
-        });
-      }}
-      onPaste={blockClipboard}
-  onCopy={blockClipboard}
-  onCut={blockClipboard}
-  onDrop={blockClipboard}
-      inputMode="numeric"
-      maxLength={6}
-      className={`
+            {form.billingNumber.length < 6 && (
+              <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center z-0">
+                <span className="font-mono text-gray-400">
+                  {maskedValue(form.billingNumber)}
+                </span>
+              </div>
+            )}
+          </div>
+        </Field>
+        <Field icon={<Hash size={16} />} label="Confirm Billing Number">
+          <div className="relative">
+            <input
+              type="text"
+              name="confirmBillingNumber"
+              autoComplete="new-password"
+              value={form.confirmBillingNumber}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, "").slice(0, 6);
+                handleChange({
+                  target: { name: "confirmBillingNumber", value },
+                });
+              }}
+              onPaste={blockClipboard}
+              onCopy={blockClipboard}
+              onCut={blockClipboard}
+              onDrop={blockClipboard}
+              inputMode="numeric"
+              maxLength={6}
+              className={`
         ${inputClass}
         bg-transparent relative z-10
         ${
@@ -305,26 +300,24 @@ const blockClipboard = (e) => {
             : ""
         }
       `}
-      required
-    />
+              required
+            />
 
-    {form.confirmBillingNumber.length < 6 && (
-      <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center z-0">
-        <span className="font-mono text-gray-400">
-          {maskedValue(form.confirmBillingNumber)}
-        </span>
-      </div>
-    )}
-  </div>
+            {form.confirmBillingNumber.length < 6 && (
+              <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center z-0">
+                <span className="font-mono text-gray-400">
+                  {maskedValue(form.confirmBillingNumber)}
+                </span>
+              </div>
+            )}
+          </div>
 
-  {billingMismatch && (
-    <p className="mt-1 text-sm text-red-600">
-      Billing numbers do not match
-    </p>
-  )}
-</Field>
-
-
+          {billingMismatch && (
+            <p className="mt-1 text-sm text-red-600">
+              Billing numbers do not match
+            </p>
+          )}
+        </Field>
 
         <Field icon={<Briefcase size={16} />} label="Service">
           <select
@@ -343,34 +336,31 @@ const blockClipboard = (e) => {
           </select>
         </Field>
 
-       <Field icon={<BadgeDollarSign size={16} />} label="DOJ / FBI Fee">
-  <select
-    name="feeId"
-    value={form.feeId || ""}
-    onChange={handleChange}
-    disabled={isDojDisabled}
-    className={`
+        <Field icon={<BadgeDollarSign size={16} />} label="DOJ / FBI Fee">
+          <select
+            name="feeId"
+            value={form.feeId || ""}
+            onChange={handleChange}
+            disabled={isDojDisabled}
+            className={`
       ${inputClass}
       ${isDojDisabled ? "bg-gray-100 text-gray-500 cursor-not-allowed" : ""}
     `}
-  >
-    {isDojDisabled ? (
-      <option value={zeroDojFeeId || ""}>$0</option>
-    ) : (
-      <>
-        <option value="">Select fee</option>
-        {fees.map((f) => (
-          <option key={f._id} value={f._id}>
-             (${f.amount})
-          </option>
-        ))}
-      </>
-    )}
-  </select>
-</Field>
-
-
-       
+          >
+            {isDojDisabled ? (
+              <option value={zeroDojFeeId || ""}>$0</option>
+            ) : (
+              <>
+                <option value="">Select fee</option>
+                {fees.map((f) => (
+                  <option key={f._id} value={f._id}>
+                    (${f.amount})
+                  </option>
+                ))}
+              </>
+            )}
+          </select>
+        </Field>
 
         <Field icon={<Layers size={16} />} label="Quantity">
           <select
@@ -405,7 +395,7 @@ const blockClipboard = (e) => {
 
           <button
             type="button"
-            onClick={() => navigate(`${basePath}/my-entries`)}
+            onClick={() => navigate(`${basePath}/${from}`)}
             className="
               flex-1 h-11 rounded-lg
               border border-gray-300
@@ -457,9 +447,7 @@ function PageLoader() {
     <div className="flex items-center justify-center min-h-[60vh]">
       <div className="flex flex-col items-center gap-4">
         <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
-        <span className="text-gray-600 font-medium">
-          Loading record…
-        </span>
+        <span className="text-gray-600 font-medium">Loading record…</span>
       </div>
     </div>
   );
