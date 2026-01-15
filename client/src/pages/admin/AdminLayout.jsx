@@ -3,19 +3,17 @@ import { useAuth } from "../../context/AuthContext";
 import { useState } from "react";
 import { ShieldCheck } from "lucide-react";
 
-const navItem =
-  "px-4 py-3 rounded-lg transition flex items-center text-base";
-const activeNav =
-  "bg-blue-50 text-blue-600 font-semibold";
-const inactiveNav =
-  "text-gray-700 hover:bg-gray-100 hover:text-gray-900";
+const navItem = "px-4 py-3 rounded-lg transition flex items-center text-base";
+const activeNav = "bg-blue-50 text-blue-600 font-semibold";
+const inactiveNav = "text-gray-700 hover:bg-gray-100 hover:text-gray-900";
 
 export default function AdminLayout() {
   const { logout } = useAuth();
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
+    <div className="h-screen flex bg-gray-50 overflow-hidden">
+      {" "}
       {/* MOBILE OVERLAY */}
       {open && (
         <div
@@ -23,7 +21,6 @@ export default function AdminLayout() {
           className="fixed inset-0 bg-black/40 z-40 lg:hidden"
         />
       )}
-
       {/* SIDEBAR */}
       <aside
         className={`
@@ -48,7 +45,7 @@ export default function AdminLayout() {
         </div>
 
         {/* NAVIGATION */}
-        <nav className="flex-1 px-4 py-5 space-y-2">
+        <nav className="flex-1 overflow-y-auto scrollbar-hover">
           {[
             ["Dashboard", "/admin"],
             ["Service Entry", "/admin/service-entry"],
@@ -57,7 +54,8 @@ export default function AdminLayout() {
             ["Organizations", "/admin/organizations"],
             ["Services", "/admin/services"],
             ["DOJ / FBI Fees", "/admin/fees"],
-            ["Technicians", "/admin/technicians"],
+            ["Manage Staff", "/admin/staff"], // ✅ ADD THIS
+
             ["Export", "/admin/export"],
             ["Export History", "/admin/export-history"],
           ].map(([label, path]) => (
@@ -89,7 +87,6 @@ export default function AdminLayout() {
           </button>
         </div>
       </aside>
-
       {/* MAIN AREA */}
       <div className="flex-1 flex flex-col">
         {/* MOBILE TOP BAR (FIXED) */}
@@ -110,7 +107,7 @@ export default function AdminLayout() {
         </header>
 
         {/* CONTENT */}
-        <main className="flex-1 p-4 lg:p-6 overflow-y-auto pt-20 lg:pt-6">
+        <main className="flex-1 p-4 lg:p-6 overflow-y-auto scrollbar-hide pt-20 lg:pt-6">
           <Outlet />
         </main>
       </div>

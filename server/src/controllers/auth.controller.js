@@ -44,6 +44,12 @@ exports.login = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
+    }  
+
+    if (!user.active) {
+      return res.status(403).json({
+        message: "Account is deactivated. Please contact admin.",
+      });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -78,8 +84,6 @@ exports.login = async (req, res) => {
   }
 };
 
-
-
 exports.logout = async (req, res) => {
   // res.clearCookie("token", {
   //   httpOnly: true,
@@ -90,7 +94,6 @@ exports.logout = async (req, res) => {
 
   return res.json({ message: "Logged out successfully" });
 };
-
 
 // auth.controller.js
 exports.me = async (req, res) => {

@@ -1,19 +1,12 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useState } from "react";
-import {
-  User,
-  ClipboardList,
-  LayoutDashboard,
-  LogOut,
-} from "lucide-react";
+import { User, ClipboardList, LayoutDashboard, LogOut } from "lucide-react";
 
 const navItem =
   "px-4 py-3 rounded-lg transition flex items-center gap-3 text-base";
-const activeNav =
-  "bg-blue-50 text-blue-600 font-semibold";
-const inactiveNav =
-  "text-gray-700 hover:bg-gray-100 hover:text-gray-900";
+const activeNav = "bg-blue-50 text-blue-600 font-semibold";
+const inactiveNav = "text-gray-700 hover:bg-gray-100 hover:text-gray-900";
 
 export default function StaffLayout() {
   const { logout } = useAuth();
@@ -33,7 +26,7 @@ export default function StaffLayout() {
       <aside
         className={`
           fixed lg:static z-50
-          w-64 h-full bg-white border-r
+          w-64 h-screen bg-white border-r
           flex flex-col
           transform transition-transform duration-300
           ${open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
@@ -46,18 +39,15 @@ export default function StaffLayout() {
               <User size={22} />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-800">
-                Staff Portal
-              </h2>
-              <p className="text-sm text-gray-500">
-                Service Operations
-              </p>
+              <h2 className="text-xl font-bold text-gray-800">Staff Portal</h2>
+              <p className="text-sm text-gray-500">Service Operations</p>
             </div>
           </div>
         </div>
 
         {/* NAVIGATION */}
-        <nav className="flex-1 px-4 py-5 space-y-2">
+        <nav className="flex-1 px-4 py-5 space-y-2 overflow-y-auto scrollbar-hide">
+          {" "}
           <NavLink
             to="/staff"
             end
@@ -69,7 +59,6 @@ export default function StaffLayout() {
             <LayoutDashboard size={18} />
             Dashboard
           </NavLink>
-
           <NavLink
             to="/staff/service-entry"
             onClick={() => setOpen(false)}
@@ -80,7 +69,6 @@ export default function StaffLayout() {
             <ClipboardList size={18} />
             Service Entry
           </NavLink>
-
           <NavLink
             to="/staff/my-entries"
             onClick={() => setOpen(false)}

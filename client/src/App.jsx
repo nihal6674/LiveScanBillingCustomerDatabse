@@ -5,7 +5,6 @@ import PublicOnlyRoute from "./components/PublicOnlyRoute";
 import Login from "./auth/Login";
 import { Toaster } from "react-hot-toast";
 
-
 /* ===== STAFF ===== */
 import StaffLayout from "./pages/staff/StaffLayout";
 import StaffDashboard from "./pages/staff/StaffDashboard";
@@ -19,21 +18,16 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import Organizations from "./pages/admin/Organizations";
 import Fees from "./pages/admin/Fees";
 import Services from "./pages/admin/Services";
-import Technicians from "./pages/admin/Technicians";
 import Export from "./pages/admin/Export";
 import ExportHistory from "./pages/admin/ExportHistory";
 import AllEntries from "./pages/admin/AllEntries";
-
-
-
+import ManageStaff from "./pages/admin/ManageStaff";
 
 /* ===== MISC ===== */
 function Unauthorized() {
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <h1 className="text-xl font-bold text-red-600">
-        Unauthorized Access
-      </h1>
+      <h1 className="text-xl font-bold text-red-600">Unauthorized Access</h1>
     </div>
   );
 }
@@ -68,7 +62,7 @@ export default function App() {
             <Route index element={<StaffDashboard />} />
             <Route path="service-entry" element={<ServiceEntry />} />
             <Route path="my-entries" element={<MyEntries />} />
-            <Route path="all-entries" element={<AllEntries />} /> 
+            <Route path="all-entries" element={<AllEntries />} />
             <Route path="edit/:id" element={<EditServiceRecord />} />
           </Route>
           {/* ---------- ADMIN ---------- */}
@@ -86,11 +80,10 @@ export default function App() {
             <Route path="my-entries" element={<MyEntries />} />
             <Route path="all-entries" element={<AllEntries />} />
             <Route path="edit/:id" element={<EditServiceRecord />} />
-
             <Route path="organizations" element={<Organizations />} />
             <Route path="services" element={<Services />} />
             <Route path="fees" element={<Fees />} />
-            <Route path="technicians" element={<Technicians />} />
+            <Route path="staff" element={<ManageStaff />} /> {/* ✅ ADD */}
             <Route path="export" element={<Export />} />
             <Route path="export-history" element={<ExportHistory />} />
           </Route>
