@@ -14,12 +14,13 @@ const router = express.Router();
 // CREATE (STAFF)
 router.post("/", auth, createServiceRecord);
 
+// JUST FOR ADMIN
 router.get("/", auth, getAllServiceRecords);
 
 // EDIT (STAFF + ADMIN with rules inside controller)
 router.put("/:id", auth, updateServiceRecord);
 
-// serviceRecord.routes.js
+// GET SELF ENTERED SERVICE RECORD (STAFF,ADMIN)
 router.get("/my", auth, getMyServiceRecords);
 
 router.get("/:id", auth, getServiceRecordById);
