@@ -91,6 +91,16 @@ export default function StaffLayout() {
             <ClipboardList size={18} />
             My Entries
           </NavLink>
+          <NavLink
+            to="/staff/all-entries"
+            onClick={() => setOpen(false)}
+            className={({ isActive }) =>
+              `${navItem} ${isActive ? activeNav : inactiveNav}`
+            }
+          >
+            <ClipboardList size={18} />
+            All Entries
+          </NavLink>
         </nav>
 
         {/* LOGOUT */}

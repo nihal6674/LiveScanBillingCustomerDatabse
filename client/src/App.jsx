@@ -68,6 +68,7 @@ export default function App() {
             <Route index element={<StaffDashboard />} />
             <Route path="service-entry" element={<ServiceEntry />} />
             <Route path="my-entries" element={<MyEntries />} />
+            <Route path="all-entries" element={<AllEntries />} /> 
             <Route path="edit/:id" element={<EditServiceRecord />} />
           </Route>
           {/* ---------- ADMIN ---------- */}
