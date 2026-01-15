@@ -343,13 +343,13 @@ export default function ServiceEntry() {
     `}
           >
             {isDojDisabled ? (
-              <option value={zeroDojFeeId}>DOJ-1 ($0)</option>
+              <option value={zeroDojFeeId}>$0</option>
             ) : (
               <>
                 <option value="">Select fee</option>
                 {fees.map((f) => (
                   <option key={f._id} value={f._id}>
-                    {f.label} (${f.amount})
+                    (${f.amount})
                   </option>
                 ))}
               </>

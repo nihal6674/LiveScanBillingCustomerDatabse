@@ -13,6 +13,7 @@ import {
   Layers,
   AlertTriangle,
 } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 const DOJ_ENABLED_BILLING = "148435";
 
 
@@ -23,7 +24,8 @@ export default function EditServiceRecord() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-
+  const {user}=useAuth();
+  const basePath=user.role==="ADMIN"?"/admin":"/staff";
   const [organizations, setOrganizations] = useState([]);
   const [services, setServices] = useState([]);
   const [fees, setFees] = useState([]);
@@ -108,7 +110,7 @@ if (zeroFee) {
 
       toast.success("Service record updated successfully");
 
-      navigate("/staff/my-entries");
+      navigate(`${basePath}/my-entries`);
     } catch (err) {
       const msg =
         err.response?.data?.message || "Update failed";
@@ -353,13 +355,13 @@ const blockClipboard = (e) => {
     `}
   >
     {isDojDisabled ? (
-      <option value={zeroDojFeeId || ""}>DOJ-1 ($0)</option>
+      <option value={zeroDojFeeId || ""}>$0</option>
     ) : (
       <>
         <option value="">Select fee</option>
         {fees.map((f) => (
           <option key={f._id} value={f._id}>
-            {f.label} (${f.amount})
+             (${f.amount})
           </option>
         ))}
       </>
@@ -403,7 +405,7 @@ const blockClipboard = (e) => {
 
           <button
             type="button"
-            onClick={() => navigate("/staff/my-entries")}
+            onClick={() => navigate(`${basePath}/my-entries`)}
             className="
               flex-1 h-11 rounded-lg
               border border-gray-300

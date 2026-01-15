@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../../api/axios";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+
 import {
   Calendar,
   Building2,
@@ -13,12 +14,14 @@ import {
   Lock,
 } from "lucide-react";
 import { formatDate } from "../../utils/date";
+import { useAuth } from "../../context/AuthContext";
 
 export default function MyEntries() {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-
+  const {user}=useAuth();
+  const  basePath=user.role==="ADMIN"?"/admin":"/staff";
   const loadRecords = () => {
     setLoading(true);
     api
@@ -107,7 +110,7 @@ export default function MyEntries() {
                           </span>
                         ) : (
                           <button
-                            onClick={() => navigate(`/staff/edit/${r._id}`)}
+                            onClick={() => navigate(`${basePath}/edit/${r._id}`)}
                             className="inline-flex items-center gap-1 text-blue-600 font-semibold hover:underline"
                           >
                             <Pencil size={14} /> Edit
@@ -173,7 +176,7 @@ export default function MyEntries() {
                       </span>
                     ) : (
                       <button
-                        onClick={() => navigate(`/staff/edit/${r._id}`)}
+                        onClick={() => navigate(`${basePath}/edit/${r._id}`)}
                         className="flex items-center gap-1 text-blue-600 font-semibold"
                       >
                         <Pencil size={14} /> Edit
