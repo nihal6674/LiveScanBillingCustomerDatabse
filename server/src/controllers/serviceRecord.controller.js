@@ -236,18 +236,44 @@ exports.updateServiceRecord = async (req, res) => {
 // serviceRecord.controller.js
 exports.getMyServiceRecords = async (req, res) => {
   try {
-    const records = await ServiceRecord.find({
-      enteredBy: req.user.userId,
-    })
-      .sort({ createdAt: -1 })
-      .limit(50)
-      .lean();
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const search = req.query.search || "";
 
-    res.json(records);
+    const skip = (page - 1) * limit;
+
+    const searchQuery = {
+      enteredBy: req.user.userId,
+      ...(search && {
+        $or: [
+          { applicantName: { $regex: search, $options: "i" } },
+          { organizationName: { $regex: search, $options: "i" } },
+          { serviceName: { $regex: search, $options: "i" } },
+          { billingNumber: { $regex: search, $options: "i" } },
+        ],
+      }),
+    };
+
+    const [records, total] = await Promise.all([
+      ServiceRecord.find(searchQuery)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+
+      ServiceRecord.countDocuments(searchQuery),
+    ]);
+
+    res.json({
+      records,
+      total,
+    });
   } catch (err) {
+    console.error("GET MY RECORDS ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 // serviceRecord.controller.js
 exports.getServiceRecordById = async (req, res) => {
@@ -256,22 +282,48 @@ exports.getServiceRecordById = async (req, res) => {
   res.json(record);
 };
 
-// ADMIN: view all service records
+// ADMIN / STAFF: view service records with search + pagination
 exports.getAllServiceRecords = async (req, res) => {
   try {
-    // 🔒 Admin-only check
-    if (req.user.role !== "ADMIN") {
+    if (req.user.role !== "ADMIN" && req.user.role !== "STAFF") {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    const records = await ServiceRecord.find()
-      .populate("enteredBy", "email name") // ✅ ADD THIS
-      .sort({ createdAt: -1 })
-      .lean();
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const search = req.query.search || "";
 
-    res.json(records);
+    const skip = (page - 1) * limit;
+
+    const searchQuery = search
+      ? {
+          $or: [
+            { applicantName: { $regex: search, $options: "i" } },
+            { organizationName: { $regex: search, $options: "i" } },
+            { serviceName: { $regex: search, $options: "i" } },
+            { billingNumber: { $regex: search, $options: "i" } },
+          ],
+        }
+      : {};
+
+    const [records, total] = await Promise.all([
+      ServiceRecord.find(searchQuery)
+        .populate("enteredBy", "email name")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+
+      ServiceRecord.countDocuments(searchQuery),
+    ]);
+
+    res.json({
+      records,
+      total,
+    });
   } catch (err) {
     console.error("GET ALL RECORDS ERROR:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
+

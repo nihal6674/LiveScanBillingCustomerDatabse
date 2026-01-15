@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axios";
+import { useAuth } from "../../context/AuthContext"
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
@@ -17,22 +18,42 @@ import { formatDate } from "../../utils/date";
 export default function AllEntries() {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+const [page, setPage] = useState(1);
+const limit = 10;
+const [total, setTotal] = useState(0);
+const totalPages = Math.ceil(total / limit);
+
+  const {user}=useAuth();
+  const basePath=user.role==="ADMIN"?"/admin":"/staff";
   const navigate = useNavigate();
 
-  const loadRecords = () => {
-    setLoading(true);
-    api
-      .get("/service-records") // 🔑 ADMIN: all records
-      .then((res) => setRecords(res.data))
-      .catch(() => toast.error("Failed to load records"))
-      .finally(() => setLoading(false));
-  };
+  const loadRecords = async () => {
+  setLoading(true);
+  try {
+    const res = await api.get("/service-records", {
+      params: { page, limit, search },
+    });
 
-  useEffect(() => {
+    setRecords(res.data.records);
+    setTotal(res.data.total);
+  } catch {
+    toast.error("Failed to load records");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+ useEffect(() => {
+  const timer = setTimeout(() => {
     loadRecords();
-  }, []);
+  }, 300);
 
-  if (loading) return <PageLoader />;
+  return () => clearTimeout(timer);
+}, [page, search]);
+
+
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -45,8 +66,23 @@ export default function AllEntries() {
           View and manage all service entries across staff
         </p>
       </div>
+      <input
+  value={search}
+  onChange={(e) => {
+    setPage(1);
+    setSearch(e.target.value);
+  }}
+  placeholder="Search applicant, organization, service, billing #"
+  className="w-full md:w-96 mb-4 px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
+/>
+{loading && (
+  <p className="text-sm text-gray-400 mb-2">
+    Searching…
+  </p>
+)}
 
-      {records.length === 0 ? (
+
+      {!loading && records.length === 0 ? (
         <div className="bg-white rounded-xl shadow border p-6 text-gray-500">
           No entries found.
         </div>
@@ -74,6 +110,21 @@ export default function AllEntries() {
                 {records.map((r) => {
                   const total =
                     (r.serviceRate + r.feeAmount) * r.quantity;
+                    
+
+                  const enteredById =
+  typeof r.enteredBy === "string"
+    ? r.enteredBy
+    : r.enteredBy?._id;
+
+const userId = user.id; // ✅ THIS IS THE FIX
+
+const canEdit =
+  !r.billed &&
+  (
+    user.role === "ADMIN" ||
+    enteredById === userId
+  );
 
                   return (
                     <tr key={r._id} className="hover:bg-gray-50 transition">
@@ -117,20 +168,21 @@ export default function AllEntries() {
                       </td>
 
                       <td className="px-4 py-3 text-center">
-                        {r.billed ? (
-                          <span className="inline-flex items-center gap-1 text-gray-400">
-                            <Lock size={14} /> Locked
-                          </span>
-                        ) : (
-                          <button
-                            onClick={() =>
-                              navigate(`/admin/edit/${r._id}`)
-                            }
-                            className="inline-flex items-center gap-1 text-blue-600 font-semibold hover:underline"
-                          >
-                            <Pencil size={14} /> Edit
-                          </button>
-                        )}
+                        {canEdit ? (
+  <button
+    onClick={() => navigate(`${basePath}/edit/${r._id}`, {
+  state: { from: "all-entries" }
+})}
+    className="inline-flex items-center gap-1 text-blue-600 font-semibold hover:underline"
+  >
+    <Pencil size={14} /> Edit
+  </button>
+) : (
+  <span className="inline-flex items-center gap-1 text-gray-400">
+    <Lock size={14} /> Locked
+  </span>
+)}
+
                       </td>
                     </tr>
                   );
@@ -144,6 +196,20 @@ export default function AllEntries() {
             {records.map((r) => {
               const total =
                 (r.serviceRate + r.feeAmount) * r.quantity;
+             const enteredById =
+  typeof r.enteredBy === "string"
+    ? r.enteredBy
+    : r.enteredBy?._id;
+
+const userId = user.id; // ✅ THIS IS THE FIX
+
+const canEdit =
+  !r.billed &&
+  (
+    user.role === "ADMIN" ||
+    enteredById === userId
+  );
+
 
               return (
                 <div
@@ -189,20 +255,21 @@ export default function AllEntries() {
                       </span>
                     )}
 
-                    {r.billed ? (
-                      <span className="flex items-center gap-1 text-gray-400">
-                        <Lock size={14} /> Locked
-                      </span>
-                    ) : (
-                      <button
-                        onClick={() =>
-                          navigate(`/admin/edit/${r._id}`)
-                        }
-                        className="flex items-center gap-1 text-blue-600 font-semibold"
-                      >
-                        <Pencil size={14} /> Edit
-                      </button>
-                    )}
+                    {canEdit ? (
+  <button
+    onClick={() => navigate(`${basePath}/edit/${r._id}`, {
+  state: { from: "all-entries" }
+})}
+    className="flex items-center gap-1 text-blue-600 font-semibold"
+  >
+    <Pencil size={14} /> Edit
+  </button>
+) : (
+  <span className="flex items-center gap-1 text-gray-400">
+    <Lock size={14} /> Locked
+  </span>
+)}
+
                   </div>
                 </div>
               );
@@ -210,6 +277,31 @@ export default function AllEntries() {
           </div>
         </>
       )}
+      {/* PAGINATION */}
+<div className="flex justify-between items-center mt-6 text-sm">
+  <span className="text-gray-500">
+    Page {page} of {totalPages || 1}
+  </span>
+
+  <div className="space-x-2">
+    <button
+      disabled={page === 1}
+      onClick={() => setPage(page - 1)}
+      className="px-3 py-1 border rounded disabled:opacity-40"
+    >
+      Prev
+    </button>
+
+    <button
+      disabled={page === totalPages || totalPages === 0}
+      onClick={() => setPage(page + 1)}
+      className="px-3 py-1 border rounded disabled:opacity-40"
+    >
+      Next
+    </button>
+  </div>
+</div>
+
     </div>
   );
 }

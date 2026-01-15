@@ -22,18 +22,37 @@ export default function MyEntries() {
   const navigate = useNavigate();
   const {user}=useAuth();
   const  basePath=user.role==="ADMIN"?"/admin":"/staff";
-  const loadRecords = () => {
-    setLoading(true);
-    api
-      .get("/service-records/my")
-      .then((res) => setRecords(res.data))
-      .catch(() => toast.error("Failed to load records"))
-      .finally(() => setLoading(false));
-  };
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const limit = 10;
+const [total, setTotal] = useState(0);
+const totalPages = Math.ceil(total / limit);
+
+const loadRecords = async () => {
+  setLoading(true);
+  try {
+    const res = await api.get("/service-records/my", {
+      params: { page, limit, search },
+    });
+
+    setRecords(res.data.records || []);
+    setTotal(res.data.total || 0);
+  } catch {
+    toast.error("Failed to load records");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   useEffect(() => {
+  const timer = setTimeout(() => {
     loadRecords();
-  }, []);
+  }, 300);
+
+  return () => clearTimeout(timer);
+}, [page, search]);
+
 
   if (loading) return <PageLoader />;
 
@@ -46,8 +65,17 @@ export default function MyEntries() {
           Review and manage your submitted service entries
         </p>
       </div>
+      <input
+  value={search}
+  onChange={(e) => {
+    setPage(1);
+    setSearch(e.target.value);
+  }}
+  placeholder="Search applicant, organization, service, billing #"
+  className="w-full md:w-96 mb-4 px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
+/>
 
-      {records.length === 0 ? (
+      {!loading && records.length === 0 ? (
         <div className="bg-white rounded-xl shadow border p-6 text-gray-500">
           No entries found.
         </div>
@@ -110,7 +138,9 @@ export default function MyEntries() {
                           </span>
                         ) : (
                           <button
-                            onClick={() => navigate(`${basePath}/edit/${r._id}`)}
+                            onClick={() => navigate(`${basePath}/edit/${r._id}`, {
+  state: { from: "my-entries" }
+})}
                             className="inline-flex items-center gap-1 text-blue-600 font-semibold hover:underline"
                           >
                             <Pencil size={14} /> Edit
@@ -176,7 +206,9 @@ export default function MyEntries() {
                       </span>
                     ) : (
                       <button
-                        onClick={() => navigate(`${basePath}/edit/${r._id}`)}
+                        onClick={() => navigate(`${basePath}/edit/${r._id}`, {
+  state: { from: "my-entries" }
+})}
                         className="flex items-center gap-1 text-blue-600 font-semibold"
                       >
                         <Pencil size={14} /> Edit
@@ -189,6 +221,31 @@ export default function MyEntries() {
           </div>
         </>
       )}
+      {/* PAGINATION */}
+<div className="flex justify-between items-center mt-6 text-sm">
+  <span className="text-gray-500">
+    Page {page} of {totalPages || 1}
+  </span>
+
+  <div className="space-x-2">
+    <button
+      disabled={page === 1}
+      onClick={() => setPage(page - 1)}
+      className="px-3 py-1 border rounded disabled:opacity-40"
+    >
+      Prev
+    </button>
+
+    <button
+      disabled={page === totalPages || totalPages === 0}
+      onClick={() => setPage(page + 1)}
+      className="px-3 py-1 border rounded disabled:opacity-40"
+    >
+      Next
+    </button>
+  </div>
+</div>
+
     </div>
   );
 }
