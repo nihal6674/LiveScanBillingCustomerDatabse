@@ -6,12 +6,13 @@ import {
   Layers,
   User,
   FileText,
+  Download
 } from "lucide-react";
 import { formatDate } from "../../utils/date";
-
 export default function ExportHistory() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+const [downloadingId, setDownloadingId] = useState(null);
 
   useEffect(() => {
     api
@@ -19,6 +20,17 @@ export default function ExportHistory() {
       .then((res) => setHistory(res.data))
       .finally(() => setLoading(false));
   }, []);
+
+ const handleViewExport = async (exportId) => {
+  setDownloadingId(exportId);
+  try {
+    const res = await api.get(`/export/${exportId}/download`);
+    window.location.assign(res.data.url); // ✅ preserves filename + CSV
+  } finally {
+    setDownloadingId(null);
+  }
+};
+
 
   return (
     <div className="space-y-6">
@@ -47,6 +59,8 @@ export default function ExportHistory() {
                 <th className="px-4 py-3 text-left">Export Format</th>
                 <th className="px-4 py-3 text-left">Records</th>
                 <th className="px-4 py-3 text-left">Exported By</th>
+                <th className="px-4 py-3 text-center">Action</th>
+
               </tr>
             </thead>
 
@@ -108,6 +122,41 @@ export default function ExportHistory() {
                       {h.exportedBy?.email || "—"}
                     </div>
                   </td>
+
+                  <td className="px-4 py-3 text-center">
+  {h.fileKey ? (
+    <button
+  onClick={() => handleViewExport(h._id)}
+  disabled={downloadingId === h._id}
+  className={`
+    inline-flex items-center gap-1.5
+    px-3 py-1.5 rounded-lg text-sm font-medium
+    transition
+    ${
+      downloadingId === h._id
+        ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+        : "text-emerald-600 bg-emerald-100 hover:bg-emerald-200"
+    }
+  `}
+>
+  {downloadingId === h._id ? (
+    <>
+      <span className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+      Preparing…
+    </>
+  ) : (
+    <>
+      <Download size={14} />
+      View
+    </>
+  )}
+</button>
+
+  ) : (
+    <span className="text-gray-400 text-sm">—</span>
+  )}
+</td>
+
                 </tr>
               ))}
             </tbody>
@@ -185,6 +234,36 @@ export default function ExportHistory() {
                   </div>
                 </div>
               </div>
+              {h.fileKey && (
+ <button
+  onClick={() => handleViewExport(h._id)}
+  disabled={downloadingId === h._id}
+  className={`
+    w-full flex items-center justify-center gap-2
+    px-3 py-2 rounded-lg text-sm font-semibold
+    transition
+    ${
+      downloadingId === h._id
+        ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+        : "text-emerald-600 bg-emerald-100 hover:bg-emerald-200"
+    }
+  `}
+>
+  {downloadingId === h._id ? (
+    <>
+      <span className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+      Preparing…
+    </>
+  ) : (
+    <>
+      <Download size={16} />
+      View Export
+    </>
+  )}
+</button>
+
+)}
+
             </div>
           ))
         )}

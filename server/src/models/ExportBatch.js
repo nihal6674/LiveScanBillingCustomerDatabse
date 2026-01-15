@@ -18,6 +18,7 @@ const exportBatchSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+     fileKey: { type: String }, 
   },
   { timestamps: true }
 );

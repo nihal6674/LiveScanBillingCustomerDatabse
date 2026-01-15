@@ -1,5 +1,6 @@
 const ServiceRecord = require("../models/ServiceRecord");
 const ExportBatch = require("../models/ExportBatch");
+const { uploadToR2 } = require("../utils/uploadToR2");
 
 const { Parser } = require("json2csv");
 const XLSX = require("xlsx");
@@ -60,7 +61,7 @@ exports.exportMonthly = async (req, res) => {
 
     const invoiceMap = {}; // orgId -> invoiceNo
 
-    
+
 
 
     // ✅ CREATE EXPORT BATCH FIRST (CRITICAL)
@@ -73,78 +74,78 @@ exports.exportMonthly = async (req, res) => {
     });
 
     // ✅ ONE invoice number per organization
-const getInvoiceNo = (r) => {
-  const orgKey = r.organizationId.toString();
+    const getInvoiceNo = (r) => {
+      const orgKey = r.organizationId.toString();
 
-  if (!invoiceMap[orgKey]) {
-    invoiceMap[orgKey] =
-      `LS-${exportBatch._id.toString().slice(-6)}-${orgKey.slice(-4)}`;
-  }
+      if (!invoiceMap[orgKey]) {
+        invoiceMap[orgKey] =
+          `LS-${exportBatch._id.toString().slice(-6)}-${orgKey.slice(-4)}`;
+      }
 
-  return invoiceMap[orgKey];
-};
+      return invoiceMap[orgKey];
+    };
 
 
     // ✅ Prepare QBO-COMPLIANT rows (flat + safe)
-   const rows = records.flatMap((r) => {
-  const baseRow = {
-    // 🔑 ONE INVOICE PER ORG
-    "Invoice No": getInvoiceNo(r),
+    const rows = records.flatMap((r) => {
+      const baseRow = {
+        // 🔑 ONE INVOICE PER ORG
+        "Invoice No": getInvoiceNo(r),
 
-    // 👤 QBO CUSTOMER
-    Customer: r.organizationQboItemName,
+        // 👤 QBO CUSTOMER
+        Customer: r.organizationQboItemName,
 
-    // 📅 DATES
-    "Invoice Date": formatMMDDYYYY(exportDate),
-    "Due Date": dueDate,
+        // 📅 DATES
+        "Invoice Date": formatMMDDYYYY(exportDate),
+        "Due Date": dueDate,
 
-    //Terms
-    Terms: "Net 14",
+        //Terms
+        Terms: "Net 14",
 
-    // 🧾 AUDIT / INTERNAL
-    Organization: r.organizationName,
-    ServiceDate: formatMMDDYYYY(r.serviceDate),
-    Description: r.applicantName,
-    BillingNumber: r.billingNumber,
-    Technician: r.technicianName,
-  };
+        // 🧾 AUDIT / INTERNAL
+        Organization: r.organizationName,
+        ServiceDate: formatMMDDYYYY(r.serviceDate),
+        Description: r.applicantName,
+        BillingNumber: r.billingNumber,
+        Technician: r.technicianName,
+      };
 
-  const serviceRow = {
-    ...baseRow,
+      const serviceRow = {
+        ...baseRow,
 
-    // 📦 SERVICE LINE ITEM
-    "Product/Service": r.qboItemName,
-"Item Quantity": r.quantity,
-    Rate: r.serviceRate,
-    Amount: r.serviceRate * r.quantity,
+        // 📦 SERVICE LINE ITEM
+        "Product/Service": r.qboItemName,
+        "Item Quantity": r.quantity,
+        Rate: r.serviceRate,
+        Amount: r.serviceRate * r.quantity,
 
-    Service: r.serviceName,
-    "DOJ/FBI Fee": 0,
-    Total: r.serviceRate * r.quantity,
-  };
+        Service: r.serviceName,
+        "DOJ/FBI Fee": 0,
+        Total: r.serviceRate * r.quantity,
+      };
 
-  // 👉 If NO DOJ/FBI fee
-  if (!r.feeAmount || r.feeAmount === 0) {
-    return [serviceRow];
-  }
+      // 👉 If NO DOJ/FBI fee
+      if (!r.feeAmount || r.feeAmount === 0) {
+        return [serviceRow];
+      }
 
-  // 👉 DOJ/FBI FEE LINE ITEM
-  const feeRow = {
-  ...baseRow,
+      // 👉 DOJ/FBI FEE LINE ITEM
+      const feeRow = {
+        ...baseRow,
 
-  "Product/Service": "Live Scan DOJ/FBI Fee:Live Scan DOJ/FBI Fee",
-  "Item Quantity": r.quantity,   // ✅ FIXED
-  Rate: r.feeAmount,
-  Amount: r.feeAmount * r.quantity,
+        "Product/Service": "Live Scan DOJ/FBI Fee:Live Scan DOJ/FBI Fee",
+        "Item Quantity": r.quantity,   // ✅ FIXED
+        Rate: r.feeAmount,
+        Amount: r.feeAmount * r.quantity,
 
-  Service: "DOJ/FBI Fee",
-  "DOJ/FBI Fee": r.feeAmount,
-  Total: r.feeAmount * r.quantity,
-};
+        Service: "DOJ/FBI Fee",
+        "DOJ/FBI Fee": r.feeAmount,
+        Total: r.feeAmount * r.quantity,
+      };
 
 
-  return [serviceRow, feeRow];
-});
+      return [serviceRow, feeRow];
+    });
 
 
 
@@ -167,15 +168,32 @@ const getInvoiceNo = (r) => {
     // ✅ Professional filename
     const fileName = `LiveScan_HouseAccounts_${startDate}_to_${endDate}.${format}`;
 
+    const fileKey = `exports/${exportBatch._id}/${fileName}`;
+
     // ✅ CSV Export
     if (format === "csv") {
       const parser = new Parser();
       const csv = parser.parse(rows);
 
+      const buffer = Buffer.from(csv);
+
+      // ⬆️ UPLOAD TO R2
+      await uploadToR2({
+        buffer,
+        key: fileKey,
+        contentType: "text/csv",
+      });
+
+      // ⬆️ SAVE FILE KEY
+      await ExportBatch.findByIdAndUpdate(exportBatch._id, {
+        fileKey,
+      });
+
       res.header("Content-Type", "text/csv");
       res.attachment(fileName);
       return res.send(csv);
     }
+
 
     // ✅ XLSX Export
     const worksheet = XLSX.utils.json_to_sheet(rows);
@@ -187,12 +205,26 @@ const getInvoiceNo = (r) => {
       bookType: "xlsx",
     });
 
+    // ⬆️ UPLOAD TO R2
+    await uploadToR2({
+      buffer,
+      key: fileKey,
+      contentType:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    // ⬆️ SAVE FILE KEY
+    await ExportBatch.findByIdAndUpdate(exportBatch._id, {
+      fileKey,
+    });
+
     res.header(
       "Content-Type",
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     );
     res.attachment(fileName);
     return res.send(buffer);
+
 
   } catch (err) {
     console.error("EXPORT ERROR 👉", err);
@@ -214,5 +246,27 @@ exports.getExportHistory = async (req, res) => {
   } catch (err) {
     console.error("EXPORT HISTORY ERROR 👉", err);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+const { getR2SignedUrl } = require("../utils/getSignedUrl");
+
+exports.downloadExport = async (req, res) => {
+  try {
+    const batch = await ExportBatch.findById(req.params.id);
+
+    if (!batch || !batch.fileKey) {
+      return res.status(404).json({ message: "File not found" });
+    }
+
+    // optional: role check
+    // if (req.user.role !== "ADMIN") return res.status(403).json({ message: "Forbidden" });
+
+    const url = await getR2SignedUrl(batch.fileKey, 300); // 5 min
+
+    res.json({ url });
+  } catch (err) {
+    console.error("DOWNLOAD EXPORT ERROR:", err);
+    res.status(500).json({ message: "Failed to generate download link" });
   }
 };

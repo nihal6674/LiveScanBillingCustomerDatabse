@@ -1,5 +1,5 @@
 const express = require("express");
-const { exportMonthly } = require("../controllers/export.controller");
+const { exportMonthly, getExportHistory, downloadExport } = require("../controllers/export.controller");
 
 const auth = require("../middlewares/auth.middleware");
 const role = require("../middlewares/role.middleware");
@@ -13,7 +13,9 @@ router.get(
   "/history",
   auth,
   role(ADMIN),
-  require("../controllers/export.controller").getExportHistory
+  getExportHistory
 );
+
+router.get("/:id/download", auth, role(ADMIN), downloadExport);
 
 module.exports = router;
