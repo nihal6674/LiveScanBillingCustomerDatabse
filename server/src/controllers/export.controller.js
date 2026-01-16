@@ -16,10 +16,6 @@ const formatMMDDYYYY = (date) => {
 exports.exportMonthly = async (req, res) => {
   try {
 
-
-
-    console.log("EXPORT BODY 👉", req.body);
-
     const { startDate, endDate, format } = req.body;
 
     const exportDate = new Date(); // export execution date
