@@ -39,7 +39,8 @@ exports.register = async (req, res) => {
 // LOGIN
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    let { email, password } = req.body;
+        email = email.trim().toLowerCase();
 
     const user = await User.findOne({ email });
     if (!user) {
@@ -48,7 +49,7 @@ exports.login = async (req, res) => {
 
     if (!user.active) {
       return res.status(403).json({
-        message: "Account is deactivated. Please contact admin.",
+        message: "Invalid Credentials",
       });
     }
 
@@ -94,7 +95,6 @@ exports.logout = async (req, res) => {
 
   return res.json({ message: "Logged out successfully" });
 };
-
 // auth.controller.js
 exports.me = async (req, res) => {
   res.json(req.user);
