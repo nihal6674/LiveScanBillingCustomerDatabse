@@ -11,6 +11,7 @@ export default function ResetPassword() {
 
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   // ✅ Force correct flow
@@ -23,6 +24,17 @@ export default function ResetPassword() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (loading) return;
+
+    // 🔐 Client-side validation
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
 
     setLoading(true);
     try {
@@ -51,20 +63,32 @@ export default function ResetPassword() {
           Set New Password
         </h1>
 
+        {/* OTP */}
         <input
           type="text"
-          placeholder="Enter OTP"
+          placeholder="Enter verification code"
           value={otp}
           onChange={(e) => setOtp(e.target.value)}
           required
           className="w-full p-3 border rounded-lg"
         />
 
+        {/* New Password */}
         <input
           type="password"
-          placeholder="New Password"
+          placeholder="New password"
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
+          required
+          className="w-full p-3 border rounded-lg"
+        />
+
+        {/* Confirm Password */}
+        <input
+          type="password"
+          placeholder="Confirm new password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
           required
           className="w-full p-3 border rounded-lg"
         />
