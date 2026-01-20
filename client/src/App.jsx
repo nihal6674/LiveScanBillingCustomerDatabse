@@ -3,6 +3,8 @@ import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicOnlyRoute from "./components/PublicOnlyRoute";
 import Login from "./auth/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import { Toaster } from "react-hot-toast";
 
 /* ===== STAFF ===== */
@@ -48,7 +50,26 @@ export default function App() {
                 <Login />
               </PublicOnlyRoute>
             }
-          />{" "}
+          />
+          <Route
+  path="/forgot-password"
+  element={
+    <PublicOnlyRoute>
+      <ForgotPassword />
+    </PublicOnlyRoute>
+  }
+/>
+
+<Route
+  path="/reset-password"
+  element={
+    <PublicOnlyRoute>
+      <ResetPassword />
+    </PublicOnlyRoute>
+  }
+/>
+
+          {" "}
           <Route path="/unauthorized" element={<Unauthorized />} />
           {/* ---------- STAFF ---------- */}
           <Route
