@@ -18,7 +18,21 @@ const exportBatchSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-     fileKey: { type: String }, 
+
+    selectAllOrganizations: {
+      type: Boolean,
+      default: true,
+    },
+
+    organizationIds: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Organization",
+      },
+    ],
+    
+     fileKey: { type: String },
+
   },
   { timestamps: true }
 );
