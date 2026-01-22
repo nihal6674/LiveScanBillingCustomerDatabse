@@ -3,7 +3,7 @@ const Organization = require("../models/Organization");
 // CREATE
 exports.createOrganization = async (req, res) => {
   try {
-    const { name, orgQboItemName } = req.body;
+    const { name, orgQboItemName, invoiceMemo } = req.body;
 
     if (!name || !orgQboItemName) {
       return res.status(400).json({
@@ -26,6 +26,8 @@ exports.createOrganization = async (req, res) => {
     const org = await Organization.create({
       name,
       orgQboItemName,
+            invoiceMemo: invoiceMemo?.trim() || "",
+
     });
 
     res.status(201).json(org);
@@ -51,7 +53,7 @@ exports.getOrganizations = async (req, res) => {
 exports.updateOrganization = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, orgQboItemName } = req.body;
+    const { name, orgQboItemName, invoiceMemo } = req.body;
 
     const org = await Organization.findById(id);
     if (!org) {
@@ -60,7 +62,9 @@ exports.updateOrganization = async (req, res) => {
 
     if (name) org.name = name;
     if (orgQboItemName) org.orgQboItemName = orgQboItemName;
-
+     if (invoiceMemo !== undefined) {
+      org.invoiceMemo = invoiceMemo.trim();
+    }
     await org.save();
     res.json(org);
   } catch (err) {

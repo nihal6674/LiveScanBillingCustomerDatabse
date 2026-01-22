@@ -13,6 +13,11 @@ const organizationSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+     invoiceMemo: {
+      type: String,
+      trim: true,
+      default: "",
+    },
 
     active: { type: Boolean, default: true },
     suspended: { type: Boolean, default: false },

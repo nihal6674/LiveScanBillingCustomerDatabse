@@ -1,6 +1,7 @@
 const ServiceRecord = require("../models/ServiceRecord");
 const ExportBatch = require("../models/ExportBatch");
 const { uploadToR2 } = require("../utils/uploadToR2");
+const { getR2SignedUrl } = require("../utils/getSignedUrl");
 const { Parser } = require("json2csv");
 const XLSX = require("xlsx");
 const formatMMDDYYYY = (date) => {
@@ -62,7 +63,9 @@ exports.exportMonthly = async (req, res) => {
     }
 
     const records = await ServiceRecord.find(query)
-      .sort({ organizationName: 1, serviceDate: 1 });
+  .populate("organizationId", "invoiceMemo")
+  .sort({ organizationName: 1, serviceDate: 1 });
+
 
     if (records.length === 0) {
       return res.status(400).json({
@@ -100,6 +103,7 @@ exports.exportMonthly = async (req, res) => {
         "Invoice Date": formatMMDDYYYY(exportDate),
         "Due Date": dueDate,
         Terms: "Net 14",
+        "Memo": r.organizationId?.invoiceMemo || "",
 
         Organization: r.organizationName,
         ServiceDate: formatMMDDYYYY(r.serviceDate),
@@ -218,8 +222,6 @@ exports.getExportHistory = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
-const { getR2SignedUrl } = require("../utils/getSignedUrl");
 
 exports.downloadExport = async (req, res) => {
   try {
